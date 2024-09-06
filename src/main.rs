@@ -2,23 +2,25 @@ use std::fs::{OpenOptions, File};
 use std::io::{Write, Read};
 use std::path::Path;
 use std::collections::HashMap;
-use clap::{Arg, App};
+use clap::Parser;
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Overwrite existing variables
+    #[arg(short, long)]
+    force: bool,
+
+    /// KEY=value pairs to set
+    #[arg(required = true)]
+    vars: Vec<String>,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let matches = App::new("envset")
-        .version("0.1.0")
-        .about("Sets environment variables in .env file")
-        .arg(Arg::with_name("force")
-            .short("f")
-            .long("force")
-            .help("Overwrite existing variables"))
-        .arg(Arg::with_name("vars")
-            .multiple(true)
-            .help("KEY=value pairs to set"))
-        .get_matches();
+    let cli = Cli::parse();
 
-    let force = matches.is_present("force");
-    let vars: Vec<_> = matches.values_of("vars").unwrap_or_default().collect();
+    let force = cli.force;
+    let vars = cli.vars;
 
     if vars.is_empty() {
         println!("Usage: envset [-f|--force] KEY1='value1' KEY2='value2' ...");
