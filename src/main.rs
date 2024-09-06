@@ -13,6 +13,10 @@ struct Cli {
     #[arg(short, long)]
     force: bool,
 
+    /// Output file path
+    #[arg(short, long, default_value = ".env")]
+    output: String,
+
     /// KEY=value pairs to set
     #[arg(required = true)]
     vars: Vec<String>,
@@ -23,8 +27,7 @@ fn main() {
 
     let force = cli.force;
     let vars = cli.vars;
-
-    let env_file = ".env";
+    let env_file = &cli.output;
     let mut env_vars = match read_env_file(env_file) {
         Ok(vars) => vars,
         Err(e) => {
