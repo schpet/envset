@@ -2,7 +2,9 @@ use std::fs::{OpenOptions, File};
 use std::io::{Write, Read};
 use std::path::Path;
 use std::collections::HashMap;
+use std::process;
 use clap::Parser;
+use colored::*;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -16,7 +18,7 @@ struct Cli {
     vars: Vec<String>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let cli = Cli::parse();
 
     let force = cli.force;
@@ -25,11 +27,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if vars.is_empty() {
         println!("Usage: envset [-f|--force] KEY1='value1' KEY2='value2' ...");
         println!("  -f, --force    Overwrite existing variables");
-        return Ok(());
+        return;
     }
 
     let env_file = ".env";
-    let mut env_vars = read_env_file(env_file)?;
+    let mut env_vars = match read_env_file(env_file) {
+        Ok(vars) => vars,
+        Err(e) => {
+            eprintln!("Error reading .env file: {}", e);
+            process::exit(1);
+        }
+    };
+
     let mut new_vars = HashMap::new();
 
     for var in vars {
@@ -48,13 +57,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
         } else {
-            println!("Skipped {} (use -f to overwrite)", key);
+            eprintln!("{}", format!("Error: Environment variable '{}' is already set. Use --force to overwrite.", key).red());
+            process::exit(1);
         }
     }
 
-    write_env_file(env_file, &env_vars)?;
-
-    Ok(())
+    if let Err(e) = write_env_file(env_file, &env_vars) {
+        eprintln!("Error writing .env file: {}", e);
+        process::exit(1);
+    }
 }
 
 fn read_env_file(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
