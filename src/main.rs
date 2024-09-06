@@ -36,21 +36,26 @@ fn main() {
         }
     };
 
-    let mut new_vars = HashMap::new();
     let mut warnings = Vec::new();
 
-    for var in vars {
-        let parts: Vec<&str> = var.splitn(2, '=').collect();
-        if parts.len() == 2 {
-            let key = parts[0].trim();
-            let value = parts[1].trim().trim_matches('\'').trim_matches('"');
-            new_vars.insert(key.to_string(), value.to_string());
-        } else {
-            println!("Invalid argument: {}. Skipping.", var);
-        }
-    }
+    let new_vars: HashMap<String, String> = vars
+        .into_iter()
+        .filter_map(|var| {
+            let mut parts = var.splitn(2, '=');
+            match (parts.next(), parts.next()) {
+                (Some(key), Some(value)) => Some((
+                    key.trim().to_string(),
+                    value.trim().trim_matches('\'').trim_matches('"').to_string(),
+                )),
+                _ => {
+                    println!("Invalid argument: {}. Skipping.", var);
+                    None
+                }
+            }
+        })
+        .collect();
 
-    for (key, value) in new_vars {
+    for (key, value) in &new_vars {
         if !env_vars.contains_key(&key) || force {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
