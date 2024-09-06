@@ -68,7 +68,7 @@ fn main() {
     }
 
     // Print warnings after writing the file
-    for warning in warnings {
+    for warning in &warnings {
         eprintln!("{}", warning.yellow());
     }
 
