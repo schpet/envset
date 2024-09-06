@@ -59,7 +59,7 @@ fn main() {
         .collect();
 
     for (key, value) in &new_vars {
-        if !env_vars.contains_key(&key) || force {
+        if !env_vars.contains_key(key) || force {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
         } else {
