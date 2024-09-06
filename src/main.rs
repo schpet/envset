@@ -4,7 +4,7 @@ use std::path::Path;
 use std::collections::HashMap;
 use std::process;
 use clap::Parser;
-use colored::*;
+use colored::Colorize;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -40,6 +40,7 @@ fn main() {
     };
 
     let mut new_vars = HashMap::new();
+    let mut warnings = Vec::new();
 
     for var in vars {
         let parts: Vec<&str> = var.splitn(2, '=').collect();
@@ -57,13 +58,22 @@ fn main() {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
         } else {
-            eprintln!("{}", format!("Error: Environment variable '{}' is already set. Use --force to overwrite.", key).red());
-            process::exit(1);
+            warnings.push(format!("Warning: Environment variable '{}' is already set. Use --force to overwrite.", key));
         }
     }
 
     if let Err(e) = write_env_file(env_file, &env_vars) {
         eprintln!("Error writing .env file: {}", e);
+        process::exit(1);
+    }
+
+    // Print warnings after writing the file
+    for warning in warnings {
+        eprintln!("{}", warning.yellow());
+    }
+
+    // Exit with an error code if there were any warnings
+    if !warnings.is_empty() {
         process::exit(1);
     }
 }
