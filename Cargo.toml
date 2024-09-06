@@ -2,6 +2,12 @@
 name = "envset"
 version = "0.1.0"
 edition = "2021"
+description = "A command-line tool for setting environment variables in a .env file"
+license = "ISC"
+authors = ["Peter Schilling"]
+repository = "https://github.com/schpet/envset"
+keywords = ["env", "environment", "dotenv", "cli"]
+categories = ["command-line-utilities", "config"]
 
 [dependencies]
 clap = { version = "4.5.17", features = ["derive"] }
