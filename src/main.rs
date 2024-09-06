@@ -24,12 +24,6 @@ fn main() {
     let force = cli.force;
     let vars = cli.vars;
 
-    if vars.is_empty() {
-        println!("Usage: envset [-f|--force] KEY1='value1' KEY2='value2' ...");
-        println!("  -f, --force    Overwrite existing variables");
-        return;
-    }
-
     let env_file = ".env";
     let mut env_vars = match read_env_file(env_file) {
         Ok(vars) => vars,
