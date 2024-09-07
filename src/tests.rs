@@ -88,3 +88,31 @@ fn test_parse_stdin_with_pipe() {
     assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
     assert_eq!(result.len(), 2);
 }
+
+#[test]
+fn test_print_diff_multiple_vars() {
+    let mut original = HashMap::new();
+    original.insert("KEY1".to_string(), "old_value1".to_string());
+    original.insert("KEY2".to_string(), "old_value2".to_string());
+    original.insert("KEY3".to_string(), "value3".to_string());
+
+    let mut updated = HashMap::new();
+    updated.insert("KEY1".to_string(), "new_value1".to_string());
+    updated.insert("KEY2".to_string(), "new_value2".to_string());
+    updated.insert("KEY3".to_string(), "value3".to_string());
+    updated.insert("KEY4".to_string(), "new_value4".to_string());
+
+    let mut output = Vec::new();
+    {
+        let mut cursor = Cursor::new(&mut output);
+        print_diff_to_writer(&original, &updated, &mut cursor);
+    }
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("-KEY1=old_value1"));
+    assert!(output_str.contains("+KEY1=new_value1"));
+    assert!(output_str.contains("-KEY2=old_value2"));
+    assert!(output_str.contains("+KEY2=new_value2"));
+    assert!(output_str.contains("+KEY4=new_value4"));
+    assert!(!output_str.contains("KEY3=value3"));
+}

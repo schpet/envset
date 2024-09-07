@@ -66,15 +66,23 @@ fn main() {
 }
 
 fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, String>) {
+    print_diff_to_writer(original, updated, &mut std::io::stdout());
+}
+
+fn print_diff_to_writer<W: Write>(
+    original: &HashMap<String, String>,
+    updated: &HashMap<String, String>,
+    writer: &mut W,
+) {
     for key in updated.keys() {
         let updated_value = updated.get(key).unwrap();
         match original.get(key) {
             Some(original_value) if original_value != updated_value => {
-                println!("{}", format!("-{}={}", key, original_value).red());
-                println!("{}", format!("+{}={}", key, updated_value).green());
+                writeln!(writer, "{}", format!("-{}={}", key, original_value).red()).unwrap();
+                writeln!(writer, "{}", format!("+{}={}", key, updated_value).green()).unwrap();
             }
             None => {
-                println!("{}", format!("+{}={}", key, updated_value).green());
+                writeln!(writer, "{}", format!("+{}={}", key, updated_value).green()).unwrap();
             }
             _ => {}
         }
@@ -82,10 +90,12 @@ fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, Stri
 
     for key in original.keys() {
         if !updated.contains_key(key) {
-            println!(
+            writeln!(
+                writer,
                 "{}",
                 format!("-{}={}", key, original.get(key).unwrap()).red()
-            );
+            )
+            .unwrap();
         }
     }
 }
