@@ -34,12 +34,6 @@ echo -e "KEY1=value1\nKEY2=value2" | envset
 envset --file /path/to/.env KEY1=value1
 ```
 
-4. Prevent overwriting existing variables:
-
-```
-envset --no-overwrite KEY1=value1
-```
-
 By default, `envset` will create or update a `.env` file in the current directory. If you want to use a different file, you can specify it with the `--file` option.
 
 For more information on available options, run:
