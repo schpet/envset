@@ -1,10 +1,10 @@
-use std::fs::{OpenOptions, File};
-use std::io::{Write, Read};
-use std::path::Path;
-use std::collections::HashMap;
-use std::process;
 use clap::Parser;
 use colored::Colorize;
+use std::collections::HashMap;
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
+use std::path::Path;
+use std::process;
 
 #[cfg(test)]
 mod tests;
@@ -48,7 +48,11 @@ fn main() {
             match (parts.next(), parts.next()) {
                 (Some(key), Some(value)) => Some((
                     key.trim().to_string(),
-                    value.trim().trim_matches('\'').trim_matches('"').to_string(),
+                    value
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .to_string(),
                 )),
                 _ => {
                     println!("Invalid argument: {}. Skipping.", var);
@@ -63,7 +67,10 @@ fn main() {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
         } else {
-            warnings.push(format!("Warning: Environment variable '{}' is already set. Use --force to overwrite.", key));
+            warnings.push(format!(
+                "Warning: Environment variable '{}' is already set. Use --force to overwrite.",
+                key
+            ));
         }
     }
 
@@ -83,7 +90,9 @@ fn main() {
     }
 }
 
-fn read_env_file(file_path: &str) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
+fn read_env_file(
+    file_path: &str,
+) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
     let path = Path::new(file_path);
     let mut env_vars = HashMap::new();
     let mut lines = Vec::new();
@@ -103,7 +112,11 @@ fn read_env_file(file_path: &str) -> Result<(HashMap<String, String>, Vec<String
     Ok((env_vars, lines))
 }
 
-fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>, original_lines: &[String]) -> std::io::Result<()> {
+fn write_env_file(
+    file_path: &str,
+    env_vars: &HashMap<String, String>,
+    original_lines: &[String],
+) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)

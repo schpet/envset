@@ -48,7 +48,11 @@ fn test_parse_vars() {
             match (parts.next(), parts.next()) {
                 (Some(key), Some(value)) => Some((
                     key.trim().to_string(),
-                    value.trim().trim_matches('\'').trim_matches('"').to_string(),
+                    value
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .to_string(),
                 )),
                 _ => None,
             }
@@ -66,7 +70,11 @@ fn test_preserve_comments() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
     let mut file = File::create(&file_path).unwrap();
-    writeln!(file, "# example comment\nFOO='bar'\n# another comment\nBAZ=qux").unwrap();
+    writeln!(
+        file,
+        "# example comment\nFOO='bar'\n# another comment\nBAZ=qux"
+    )
+    .unwrap();
 
     let result = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("FOO"), Some(&"bar".to_string()));
