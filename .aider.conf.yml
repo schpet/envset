@@ -1,4 +1,6 @@
 
+# https://aider.chat/docs/config/aider_conf.html
 lint-cmd: cargo fmt --
 auto-lint: true
 test-cmd: cargo test
+auto-test: true
