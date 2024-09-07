@@ -28,6 +28,16 @@ envset KEY1=value1 KEY2=value2
 echo "KEY1=value1\nKEY2=value2" | envset
 ```
 
+   You can also use heredoc syntax for multi-line input:
+
+```
+envset << EOF
+KEY1=value1
+KEY2=value2
+KEY3=value3
+EOF
+```
+
 3. Use a custom .env file location:
 
 ```
