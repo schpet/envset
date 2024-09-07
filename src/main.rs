@@ -34,8 +34,12 @@ fn main() {
     let (mut env_vars, original_lines) = match read_env_file(env_file) {
         Ok(result) => result,
         Err(e) => {
-            eprintln!("Error reading .env file: {}", e);
-            process::exit(1);
+            if e.kind() == std::io::ErrorKind::NotFound {
+                (HashMap::new(), Vec::new())
+            } else {
+                eprintln!("Error reading .env file: {}", e);
+                process::exit(1);
+            }
         }
     };
 
