@@ -2,7 +2,7 @@ use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
-use std::io::{self, Read, Write, IsAtty};
+use std::io::{self, IsAtty, Read, Write};
 use std::path::Path;
 use std::process;
 
@@ -23,7 +23,6 @@ struct Cli {
     /// KEY=value pairs to set
     #[arg(required = false)]
     vars: Vec<String>,
-
 }
 
 fn main() {
