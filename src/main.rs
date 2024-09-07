@@ -63,28 +63,23 @@ fn main() {
 }
 
 fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, String>) {
-    let mut original_content = String::new();
-    let mut updated_content = String::new();
-
-    for key in original
-        .keys()
-        .chain(updated.keys())
-        .collect::<std::collections::HashSet<_>>()
-    {
-        let original_value = original.get(key).map(|v| v.as_str()).unwrap_or("");
-        let updated_value = updated.get(key).map(|v| v.as_str()).unwrap_or("");
-
-        original_content.push_str(&format!("{}={}\n", key, original_value));
-        updated_content.push_str(&format!("{}={}\n", key, updated_value));
+    for key in updated.keys() {
+        let updated_value = updated.get(key).unwrap();
+        match original.get(key) {
+            Some(original_value) if original_value != updated_value => {
+                println!("{}", format!("-{}={}", key, original_value).red());
+                println!("{}", format!("+{}={}", key, updated_value).green());
+            }
+            None => {
+                println!("{}", format!("+{}={}", key, updated_value).green());
+            }
+            _ => {}
+        }
     }
 
-    let diff = TextDiff::from_lines(&original_content, &updated_content);
-
-    for change in diff.iter_all_changes() {
-        match change.tag() {
-            ChangeTag::Delete => print!("{}", format!("-{}", change).red()),
-            ChangeTag::Insert => print!("{}", format!("+{}", change).green()),
-            ChangeTag::Equal => {}
+    for key in original.keys() {
+        if !updated.contains_key(key) {
+            println!("{}", format!("-{}={}", key, original.get(key).unwrap()).red());
         }
     }
 }
