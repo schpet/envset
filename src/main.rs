@@ -2,7 +2,8 @@ use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
-use std::io::{self, IsAtty, Read, Write};
+use std::io::{self, Read, Write};
+use atty::Stream;
 use std::path::Path;
 use std::process;
 
@@ -40,14 +41,14 @@ fn main() {
 
     let mut warnings = Vec::new();
 
-    let new_vars = if io::stdin().is_atty() {
+    let new_vars = if atty::is(Stream::Stdin) {
         parse_args(&cli.vars)
     } else {
         parse_stdin()
     };
 
     for (key, value) in &new_vars {
-        if !env_vars.contains_key(key) || !no_overwrite {
+        if !env_vars.contains_key(key as &str) || !no_overwrite {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
         } else {
