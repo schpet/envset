@@ -90,7 +90,9 @@ fn main() {
     }
 }
 
-fn read_env_file(file_path: &str) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
+fn read_env_file(
+    file_path: &str,
+) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
     let path = Path::new(file_path);
     let mut env_vars = HashMap::new();
     let mut original_lines = Vec::new();
@@ -110,7 +112,11 @@ fn read_env_file(file_path: &str) -> Result<(HashMap<String, String>, Vec<String
     Ok((env_vars, original_lines))
 }
 
-fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>, original_lines: &[String]) -> std::io::Result<()> {
+fn write_env_file(
+    file_path: &str,
+    env_vars: &HashMap<String, String>,
+    original_lines: &[String],
+) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)

@@ -1,2 +1,4 @@
 
+lint-cmd: cargo fmt --
+auto-lint: true
 test-cmd: cargo test
