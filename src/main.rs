@@ -16,9 +16,9 @@ struct Cli {
     #[arg(short, long)]
     no_overwrite: bool,
 
-    /// Output file path
+    /// File path for the .env file
     #[arg(short, long, default_value = ".env")]
-    output: String,
+    file: String,
 
     /// KEY=value pairs to set
     #[arg(required = true)]
@@ -30,7 +30,7 @@ fn main() {
 
     let no_overwrite = cli.no_overwrite;
     let vars = cli.vars;
-    let env_file = &cli.output;
+    let env_file = &cli.file;
     let (mut env_vars, original_lines) = match read_env_file(env_file) {
         Ok(result) => result,
         Err(e) => {
