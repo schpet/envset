@@ -130,8 +130,15 @@ fn write_env_file(
         if let Some((key, original_value)) = line.split_once('=') {
             let trimmed_key = key.trim();
             if let Some(value) = env_vars.get(trimmed_key) {
-                let formatted_value = if original_value.trim().starts_with('"') || original_value.trim().starts_with('\'') {
-                    format!("{}{}{}", &original_value[..1], value, &original_value[original_value.len()-1..])
+                let formatted_value = if original_value.trim().starts_with('"')
+                    || original_value.trim().starts_with('\'')
+                {
+                    format!(
+                        "{}{}{}",
+                        &original_value[..1],
+                        value,
+                        &original_value[original_value.len() - 1..]
+                    )
                 } else {
                     value.to_string()
                 };
