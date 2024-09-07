@@ -1,7 +1,7 @@
 use atty::Stream;
 use clap::Parser;
 use colored::Colorize;
-use similar::{ChangeTag, TextDiff};
+use similar::TextDiff;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
