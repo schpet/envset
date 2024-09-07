@@ -6,6 +6,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
 use std::process;
+use similar::{ChangeTag, TextDiff};
 
 #[cfg(test)]
 mod tests;
@@ -39,7 +40,7 @@ fn main() {
         }
     };
 
-    let mut warnings = Vec::new();
+    let original_env = env_vars.clone();
 
     let new_vars = if atty::is(Stream::Stdin) {
         parse_args(&cli.vars)
@@ -50,12 +51,6 @@ fn main() {
     for (key, value) in &new_vars {
         if !env_vars.contains_key(key as &str) || !no_overwrite {
             env_vars.insert(key.clone(), value.clone());
-            println!("Set {}={}", key, value);
-        } else {
-            warnings.push(format!(
-                "Warning: Environment variable '{}' is already set. Remove --no-overwrite to overwrite.",
-                key
-            ));
         }
     }
 
@@ -64,14 +59,29 @@ fn main() {
         process::exit(1);
     }
 
-    // Print warnings after writing the file
-    for warning in &warnings {
-        eprintln!("{}", warning.yellow());
+    print_diff(&original_env, &env_vars);
+}
+
+fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, String>) {
+    let mut original_content = String::new();
+    let mut updated_content = String::new();
+
+    for key in original.keys().chain(updated.keys()).collect::<std::collections::HashSet<_>>() {
+        let original_value = original.get(key).map(|v| v.as_str()).unwrap_or("");
+        let updated_value = updated.get(key).map(|v| v.as_str()).unwrap_or("");
+        
+        original_content.push_str(&format!("{}={}\n", key, original_value));
+        updated_content.push_str(&format!("{}={}\n", key, updated_value));
     }
 
-    // Exit with an error code if there were any warnings
-    if !warnings.is_empty() {
-        process::exit(1);
+    let diff = TextDiff::from_lines(&original_content, &updated_content);
+
+    for change in diff.iter_all_changes() {
+        match change.tag() {
+            ChangeTag::Delete => print!("{}", format!("-{}", change).red()),
+            ChangeTag::Insert => print!("{}", format!("+{}", change).green()),
+            ChangeTag::Equal => {}
+        }
     }
 }
 
