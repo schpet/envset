@@ -12,9 +12,9 @@ mod tests;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    /// Overwrite existing variables
+    /// Do not overwrite existing variables
     #[arg(short, long)]
-    force: bool,
+    no_overwrite: bool,
 
     /// Output file path
     #[arg(short, long, default_value = ".env")]
@@ -28,7 +28,7 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    let force = cli.force;
+    let no_overwrite = cli.no_overwrite;
     let vars = cli.vars;
     let env_file = &cli.output;
     let (mut env_vars, original_lines) = match read_env_file(env_file) {
@@ -63,12 +63,12 @@ fn main() {
         .collect();
 
     for (key, value) in &new_vars {
-        if !env_vars.contains_key(key) || force {
+        if !env_vars.contains_key(key) || !no_overwrite {
             env_vars.insert(key.clone(), value.clone());
             println!("Set {}={}", key, value);
         } else {
             warnings.push(format!(
-                "Warning: Environment variable '{}' is already set. Use --force to overwrite.",
+                "Warning: Environment variable '{}' is already set. Remove --no-overwrite to overwrite.",
                 key
             ));
         }
