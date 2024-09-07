@@ -1,9 +1,9 @@
+use atty::Stream;
 use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
-use atty::Stream;
 use std::path::Path;
 use std::process;
 
