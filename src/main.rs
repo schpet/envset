@@ -2,7 +2,7 @@ use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{self, Read, Write};
 use std::path::Path;
 use std::process;
 
@@ -21,15 +21,18 @@ struct Cli {
     file: String,
 
     /// KEY=value pairs to set
-    #[arg(required = true)]
+    #[arg(required = false)]
     vars: Vec<String>,
+
+    /// Read from stdin
+    #[arg(short, long)]
+    stdin: bool,
 }
 
 fn main() {
     let cli = Cli::parse();
 
     let no_overwrite = cli.no_overwrite;
-    let vars = cli.vars;
     let env_file = &cli.file;
     let (mut env_vars, original_lines) = match read_env_file(env_file) {
         Ok(result) => result,
@@ -41,26 +44,11 @@ fn main() {
 
     let mut warnings = Vec::new();
 
-    let new_vars: HashMap<String, String> = vars
-        .into_iter()
-        .filter_map(|var| {
-            let mut parts = var.splitn(2, '=');
-            match (parts.next(), parts.next()) {
-                (Some(key), Some(value)) => Some((
-                    key.trim().to_string(),
-                    value
-                        .trim()
-                        .trim_matches('\'')
-                        .trim_matches('"')
-                        .to_string(),
-                )),
-                _ => {
-                    println!("Invalid argument: {}. Skipping.", var);
-                    None
-                }
-            }
-        })
-        .collect();
+    let new_vars = if cli.stdin {
+        parse_stdin()
+    } else {
+        parse_args(&cli.vars)
+    };
 
     for (key, value) in &new_vars {
         if !env_vars.contains_key(key) || !no_overwrite {
@@ -159,4 +147,56 @@ fn write_env_file(
     }
 
     Ok(())
+}
+fn parse_stdin() -> HashMap<String, String> {
+    let mut buffer = String::new();
+    io::stdin().read_to_string(&mut buffer).unwrap();
+    parse_env_content(&buffer)
+}
+
+fn parse_args(vars: &[String]) -> HashMap<String, String> {
+    vars.iter()
+        .filter_map(|var| {
+            let mut parts = var.splitn(2, '=');
+            match (parts.next(), parts.next()) {
+                (Some(key), Some(value)) => Some((
+                    key.trim().to_string(),
+                    value
+                        .trim()
+                        .trim_matches('\'')
+                        .trim_matches('"')
+                        .to_string(),
+                )),
+                _ => {
+                    println!("Invalid argument: {}. Skipping.", var);
+                    None
+                }
+            }
+        })
+        .collect()
+}
+
+fn parse_env_content(content: &str) -> HashMap<String, String> {
+    content
+        .lines()
+        .filter_map(|line| {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                None
+            } else {
+                let mut parts = line.splitn(2, '=');
+                match (parts.next(), parts.next()) {
+                    (Some(key), Some(value)) => Some((
+                        key.trim().to_string(),
+                        value
+                            .trim()
+                            .trim_matches('\'')
+                            .trim_matches('"')
+                            .to_string(),
+                    )),
+                    _ => None,
+                }
+            }
+        })
+        .collect()
 }

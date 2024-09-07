@@ -6,6 +6,30 @@ use tempfile::tempdir;
 use super::*;
 
 #[test]
+fn test_parse_stdin() {
+    let input = "KEY1=value1\nKEY2=value2\n# Comment\nKEY3='value3'\n";
+    let result = parse_env_content(input);
+    assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
+    assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
+    assert_eq!(result.get("KEY3"), Some(&"value3".to_string()));
+    assert_eq!(result.len(), 3);
+}
+
+#[test]
+fn test_parse_args() {
+    let args = vec![
+        "KEY1=value1".to_string(),
+        "KEY2='value2'".to_string(),
+        "KEY3=\"value3\"".to_string(),
+    ];
+    let result = parse_args(&args);
+    assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
+    assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
+    assert_eq!(result.get("KEY3"), Some(&"value3".to_string()));
+    assert_eq!(result.len(), 3);
+}
+
+#[test]
 fn test_read_env_file() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
