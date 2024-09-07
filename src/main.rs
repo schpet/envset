@@ -79,7 +79,10 @@ fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, Stri
 
     for key in original.keys() {
         if !updated.contains_key(key) {
-            println!("{}", format!("-{}={}", key, original.get(key).unwrap()).red());
+            println!(
+                "{}",
+                format!("-{}={}", key, original.get(key).unwrap()).red()
+            );
         }
     }
 }
