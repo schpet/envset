@@ -2,8 +2,7 @@
 lint-cmd:
   cargo fmt -- --check
 
-auto-lint:
-  true
+auto-lint: true
 
 test-cmd:
   cargo test
