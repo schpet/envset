@@ -33,39 +33,6 @@ fn test_write_env_file() {
 }
 
 #[test]
-fn test_parse_vars() {
-    let vars = vec![
-        "KEY1=value1".to_string(),
-        "KEY2='value 2'".to_string(),
-        "KEY3=\"value 3\"".to_string(),
-        "INVALID".to_string(),
-    ];
-
-    let result: HashMap<String, String> = vars
-        .into_iter()
-        .filter_map(|var| {
-            let mut parts = var.splitn(2, '=');
-            match (parts.next(), parts.next()) {
-                (Some(key), Some(value)) => Some((
-                    key.trim().to_string(),
-                    value
-                        .trim()
-                        .trim_matches('\'')
-                        .trim_matches('"')
-                        .to_string(),
-                )),
-                _ => None,
-            }
-        })
-        .collect();
-
-    assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
-    assert_eq!(result.get("KEY2"), Some(&"value 2".to_string()));
-    assert_eq!(result.get("KEY3"), Some(&"value 3".to_string()));
-    assert_eq!(result.get("INVALID"), None);
-}
-
-#[test]
 fn test_preserve_comments() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
