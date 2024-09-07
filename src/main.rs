@@ -2,7 +2,7 @@ use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
-use std::io::{self, Read, Write};
+use std::io::{self, Read, Write, IsAtty};
 use std::path::Path;
 use std::process;
 
@@ -24,9 +24,6 @@ struct Cli {
     #[arg(required = false)]
     vars: Vec<String>,
 
-    /// Read from stdin
-    #[arg(short, long)]
-    stdin: bool,
 }
 
 fn main() {
@@ -44,10 +41,10 @@ fn main() {
 
     let mut warnings = Vec::new();
 
-    let new_vars = if cli.stdin {
-        parse_stdin()
-    } else {
+    let new_vars = if io::stdin().is_atty() {
         parse_args(&cli.vars)
+    } else {
+        parse_stdin()
     };
 
     for (key, value) in &new_vars {
@@ -149,8 +146,12 @@ fn write_env_file(
     Ok(())
 }
 fn parse_stdin() -> HashMap<String, String> {
+    parse_stdin_with_reader(&mut io::stdin())
+}
+
+fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, String> {
     let mut buffer = String::new();
-    io::stdin().read_to_string(&mut buffer).unwrap();
+    reader.read_to_string(&mut buffer).unwrap();
     parse_env_content(&buffer)
 }
 

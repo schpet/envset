@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs::{self, File};
-use std::io::Write;
+use std::io::{Write, Cursor};
 use tempfile::tempdir;
 
 use super::*;
@@ -78,4 +78,13 @@ fn test_preserve_comments() {
     assert!(contents.contains("# another comment"));
     assert!(contents.contains("FOO='bar'"));
     assert!(contents.contains("BAZ=qux"));
+}
+#[test]
+fn test_parse_stdin_with_pipe() {
+    let input = "KEY1=value1\nKEY2=value2\n";
+    let mut cursor = Cursor::new(input);
+    let result = parse_stdin_with_reader(&mut cursor);
+    assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
+    assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
+    assert_eq!(result.len(), 2);
 }
