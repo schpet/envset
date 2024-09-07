@@ -103,7 +103,7 @@ fn read_env_file(
             original_lines.push(line.to_string());
             if let Some((key, value)) = line.split_once('=') {
                 if !line.trim_start().starts_with('#') {
-                    env_vars.insert(key.trim().to_string(), value.trim().to_string());
+                    env_vars.insert(key.trim().to_string(), value.trim().to_owned());
                 }
             }
         }
@@ -125,8 +125,9 @@ fn write_env_file(
 
     for line in original_lines {
         if let Some((key, _)) = line.split_once('=') {
-            if let Some(value) = env_vars.get(key.trim()) {
-                writeln!(file, "{}={}", key.trim(), value)?;
+            let trimmed_key = key.trim();
+            if let Some(value) = env_vars.get(trimmed_key) {
+                writeln!(file, "{}={}", trimmed_key, value)?;
             } else {
                 writeln!(file, "{}", line)?;
             }
