@@ -1,9 +1,9 @@
 use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::collections::HashSet;
 use std::path::Path;
 use std::process;
 
