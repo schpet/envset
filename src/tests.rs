@@ -60,3 +60,22 @@ fn test_parse_vars() {
     assert_eq!(result.get("KEY3"), Some(&"value 3".to_string()));
     assert_eq!(result.get("INVALID"), None);
 }
+
+#[test]
+fn test_preserve_comments() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "# example comment\nFOO='bar'\n# another comment\nBAZ=qux").unwrap();
+
+    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    assert_eq!(result.get("FOO"), Some(&"bar".to_string()));
+    assert_eq!(result.get("BAZ"), Some(&"qux".to_string()));
+
+    // Re-read the file to check if comments are preserved
+    let contents = fs::read_to_string(file_path).unwrap();
+    assert!(contents.contains("# example comment"));
+    assert!(contents.contains("# another comment"));
+    assert!(contents.contains("FOO='bar'"));
+    assert!(contents.contains("BAZ=qux"));
+}

@@ -31,8 +31,8 @@ fn main() {
     let force = cli.force;
     let vars = cli.vars;
     let env_file = &cli.output;
-    let mut env_vars = match read_env_file(env_file) {
-        Ok(vars) => vars,
+    let (mut env_vars, original_lines) = match read_env_file(env_file) {
+        Ok(result) => result,
         Err(e) => {
             eprintln!("Error reading .env file: {}", e);
             process::exit(1);
@@ -67,7 +67,7 @@ fn main() {
         }
     }
 
-    if let Err(e) = write_env_file(env_file, &env_vars) {
+    if let Err(e) = write_env_file(env_file, &env_vars, &original_lines) {
         eprintln!("Error writing .env file: {}", e);
         process::exit(1);
     }
@@ -83,34 +83,54 @@ fn main() {
     }
 }
 
-fn read_env_file(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
+fn read_env_file(file_path: &str) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
     let path = Path::new(file_path);
     let mut env_vars = HashMap::new();
+    let mut lines = Vec::new();
 
     if path.exists() {
-        let mut file = File::open(path)?;
-        let mut contents = String::new();
-        file.read_to_string(&mut contents)?;
-
+        let contents = fs::read_to_string(path)?;
         for line in contents.lines() {
+            lines.push(line.to_string());
             if let Some((key, value)) = line.split_once('=') {
-                env_vars.insert(key.trim().to_string(), value.trim().to_string());
+                if !line.trim_start().starts_with('#') {
+                    env_vars.insert(key.trim().to_string(), value.trim().to_string());
+                }
             }
         }
     }
 
-    Ok(env_vars)
+    Ok((env_vars, lines))
 }
 
-fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
+fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>, original_lines: &[String]) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
         .create(true)
         .open(file_path)?;
 
+    let mut written_keys = HashSet::new();
+
+    for line in original_lines {
+        if let Some((key, _)) = line.split_once('=') {
+            let key = key.trim();
+            if !key.starts_with('#') && env_vars.contains_key(key) {
+                writeln!(file, "{}={}", key, env_vars[key])?;
+                written_keys.insert(key.to_string());
+            } else {
+                writeln!(file, "{}", line)?;
+            }
+        } else {
+            writeln!(file, "{}", line)?;
+        }
+    }
+
+    // Write any new variables that weren't in the original file
     for (key, value) in env_vars {
-        writeln!(file, "{}={}", key, value)?;
+        if !written_keys.contains(key) {
+            writeln!(file, "{}={}", key, value)?;
+        }
     }
 
     Ok(())
