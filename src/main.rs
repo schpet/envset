@@ -1,12 +1,12 @@
 use atty::Stream;
 use clap::Parser;
 use colored::Colorize;
+use similar::{ChangeTag, TextDiff};
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
 use std::process;
-use similar::{ChangeTag, TextDiff};
 
 #[cfg(test)]
 mod tests;
@@ -66,10 +66,14 @@ fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, Stri
     let mut original_content = String::new();
     let mut updated_content = String::new();
 
-    for key in original.keys().chain(updated.keys()).collect::<std::collections::HashSet<_>>() {
+    for key in original
+        .keys()
+        .chain(updated.keys())
+        .collect::<std::collections::HashSet<_>>()
+    {
         let original_value = original.get(key).map(|v| v.as_str()).unwrap_or("");
         let updated_value = updated.get(key).map(|v| v.as_str()).unwrap_or("");
-        
+
         original_content.push_str(&format!("{}={}\n", key, original_value));
         updated_content.push_str(&format!("{}={}\n", key, updated_value));
     }
