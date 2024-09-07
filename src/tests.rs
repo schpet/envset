@@ -12,7 +12,7 @@ fn test_read_env_file() {
     let mut file = File::create(&file_path).unwrap();
     writeln!(file, "KEY1=value1\nKEY2=value2").unwrap();
 
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
     assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
 }
@@ -25,7 +25,8 @@ fn test_write_env_file() {
     env_vars.insert("KEY1".to_string(), "value1".to_string());
     env_vars.insert("KEY2".to_string(), "value2".to_string());
 
-    write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
+    let original_lines = Vec::new();
+    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
 
     let contents = fs::read_to_string(file_path).unwrap();
     assert!(contents.contains("KEY1=value1"));
@@ -43,7 +44,7 @@ fn test_preserve_comments() {
     )
     .unwrap();
 
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("FOO"), Some(&"bar".to_string()));
     assert_eq!(result.get("BAZ"), Some(&"qux".to_string()));
 
