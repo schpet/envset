@@ -43,6 +43,20 @@ KEY1=value1
 
 by default, `envset` will create or update a `.env` file in the current directory. if you want to use a different file, you can specify it with the `--file` option.
 
+### get the value of a single environment variable
+
+```bash
+envset get KEY1
+```
+
+This command will print the value of KEY1 from the .env file. If the variable is not found, it will print an error message.
+
+you can also specify a custom .env file location when using the `get` subcommand:
+
+```bash
+envset --file .env.test get KEY1
+```
+
 ## installation
 
 ### homebrew
