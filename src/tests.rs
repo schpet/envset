@@ -116,3 +116,28 @@ fn test_print_diff_multiple_vars() {
     assert!(output_str.contains("+KEY4=new_value4"));
     assert!(!output_str.contains("KEY3=value3"));
 }
+
+#[test]
+fn test_multiple_var_sets() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+
+    // First set ABCD=123
+    let mut env_vars = HashMap::new();
+    env_vars.insert("ABCD".to_string(), "123".to_string());
+    let original_lines = Vec::new();
+    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+
+    // Then set AB=12
+    env_vars.insert("AB".to_string(), "12".to_string());
+    let (_, original_lines) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+
+    // Read the final state of the file
+    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+
+    // Assert that both variables are set
+    assert_eq!(result.get("ABCD"), Some(&"123".to_string()));
+    assert_eq!(result.get("AB"), Some(&"12".to_string()));
+    assert_eq!(result.len(), 2);
+}
