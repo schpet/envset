@@ -22,19 +22,19 @@ cargo install envset
 
 `envset` can be used in several ways:
 
-### 1. Set environment variables from command-line arguments
+### Set environment variables from command-line arguments
 
 ```
 envset KEY1=value1 KEY2=value2
 ```
 
-### 2. Set environment variables from stdin
+### Set environment variables from stdin
 
 ```
 echo -e "KEY1=value1\nKEY2=value2" | envset
 ```
 
-### 3. Use a custom .env file location
+### Use a custom .env file location
 
 ```
 envset --file /path/to/.env KEY1=value1
