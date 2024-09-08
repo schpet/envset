@@ -179,3 +179,14 @@ fn test_keep_last_occurrence_of_duplicate_keys() {
     let final_content = fs::read_to_string(&file_path).unwrap();
     assert_eq!(final_content, "A=a\nFOO=3\nB=b\n");
 }
+#[test]
+fn test_get_single_env_var() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
+
+    let (env_vars, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    assert_eq!(env_vars.get("FOO"), Some(&"bar".to_string()));
+    assert_eq!(env_vars.get("BAZ"), Some(&"qux".to_string()));
+}

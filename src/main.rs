@@ -13,6 +13,9 @@ mod tests;
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+
     /// Do not overwrite existing variables
     #[arg(short, long)]
     no_overwrite: bool,
@@ -26,43 +29,71 @@ struct Cli {
     vars: Vec<String>,
 }
 
+#[derive(clap::Subcommand)]
+enum Commands {
+    /// Get the value of a single environment variable
+    Get { key: String },
+}
+
 fn main() {
     let cli = Cli::parse();
 
-    let no_overwrite = cli.no_overwrite;
-    let env_file = &cli.file;
-    let (mut env_vars, original_lines) = match read_env_file(env_file) {
-        Ok(result) => result,
-        Err(e) => {
-            if e.kind() == std::io::ErrorKind::NotFound {
-                (HashMap::new(), Vec::new())
-            } else {
-                eprintln!("Error reading .env file: {}", e);
-                process::exit(1);
+    match &cli.command {
+        Some(Commands::Get { key }) => {
+            let env_file = &cli.file;
+            let (env_vars, _) = match read_env_file(env_file) {
+                Ok(result) => result,
+                Err(e) => {
+                    eprintln!("Error reading .env file: {}", e);
+                    process::exit(1);
+                }
+            };
+
+            match env_vars.get(key) {
+                Some(value) => println!("{}", value),
+                None => {
+                    eprintln!("Environment variable '{}' not found", key);
+                    process::exit(1);
+                }
             }
         }
-    };
+        None => {
+            let no_overwrite = cli.no_overwrite;
+            let env_file = &cli.file;
+            let (mut env_vars, original_lines) = match read_env_file(env_file) {
+                Ok(result) => result,
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::NotFound {
+                        (HashMap::new(), Vec::new())
+                    } else {
+                        eprintln!("Error reading .env file: {}", e);
+                        process::exit(1);
+                    }
+                }
+            };
 
-    let original_env = env_vars.clone();
+            let original_env = env_vars.clone();
 
-    let new_vars = if atty::is(Stream::Stdin) {
-        parse_args(&cli.vars)
-    } else {
-        parse_stdin()
-    };
+            let new_vars = if atty::is(Stream::Stdin) {
+                parse_args(&cli.vars)
+            } else {
+                parse_stdin()
+            };
 
-    for (key, value) in &new_vars {
-        if !env_vars.contains_key(key as &str) || !no_overwrite {
-            env_vars.insert(key.clone(), value.clone());
+            for (key, value) in &new_vars {
+                if !env_vars.contains_key(key as &str) || !no_overwrite {
+                    env_vars.insert(key.clone(), value.clone());
+                }
+            }
+
+            if let Err(e) = write_env_file(env_file, &env_vars, &original_lines) {
+                eprintln!("Error writing .env file: {}", e);
+                process::exit(1);
+            }
+
+            print_diff(&original_env, &env_vars);
         }
     }
-
-    if let Err(e) = write_env_file(env_file, &env_vars, &original_lines) {
-        eprintln!("Error writing .env file: {}", e);
-        process::exit(1);
-    }
-
-    print_diff(&original_env, &env_vars);
 }
 
 fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, String>) {
