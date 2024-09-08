@@ -49,10 +49,12 @@ fn test_write_env_file() {
     env_vars.insert("KEY1".to_string(), "value1".to_string());
     env_vars.insert("KEY2".to_string(), "value2".to_string());
 
-    let original_lines = Vec::new();
+    let original_lines = vec!["# Comment".to_string(), "EXISTING=old".to_string()];
     write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
 
     let contents = fs::read_to_string(file_path).unwrap();
+    assert!(contents.contains("# Comment"));
+    assert!(contents.contains("EXISTING=old"));
     assert!(contents.contains("KEY1=value1"));
     assert!(contents.contains("KEY2=value2"));
 }
@@ -140,4 +142,40 @@ fn test_multiple_var_sets() {
     assert_eq!(result.get("ABCD"), Some(&"123".to_string()));
     assert_eq!(result.get("AB"), Some(&"12".to_string()));
     assert_eq!(result.len(), 2);
+
+    // Check the final content of the file
+    let final_content = fs::read_to_string(&file_path).unwrap();
+    assert_eq!(final_content, "ABCD=123\nAB=12\n");
+}
+
+#[test]
+fn test_keep_last_occurrence_of_duplicate_keys() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+
+    // Create an initial .env file with duplicate keys
+    let initial_content = "A=a\nFOO=1\nB=b\nFOO=2\n";
+    fs::write(&file_path, initial_content).unwrap();
+
+    // Read the initial file
+    let (mut env_vars, original_lines) = read_env_file(file_path.to_str().unwrap()).unwrap();
+
+    // Set FOO=3
+    env_vars.insert("FOO".to_string(), "3".to_string());
+
+    // Write the updated content
+    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+
+    // Read the final state of the file
+    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+
+    // Assert that only the last occurrence of FOO is kept and updated
+    assert_eq!(result.get("A"), Some(&"a".to_string()));
+    assert_eq!(result.get("B"), Some(&"b".to_string()));
+    assert_eq!(result.get("FOO"), Some(&"3".to_string()));
+    assert_eq!(result.len(), 3);
+
+    // Check the final content of the file
+    let final_content = fs::read_to_string(&file_path).unwrap();
+    assert_eq!(final_content, "A=a\nFOO=3\nB=b\n");
 }
