@@ -6,9 +6,15 @@ this cli was thrown together quickly with [aider](https://aider.chat/)
 
 ## Installation
 
-You can install `envset` using Cargo:
+### Homebrew
 
+```bash
+brew install schpet/tap/envset
 ```
+
+### Cargo
+
+```bash
 cargo install envset
 ```
 
