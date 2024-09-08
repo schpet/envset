@@ -1,7 +1,7 @@
 use atty::Stream;
 use clap::Parser;
 use colored::Colorize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
@@ -136,26 +136,17 @@ fn write_env_file(
         .create(true)
         .open(file_path)?;
 
-    let mut written_keys = Vec::new();
+    let mut written_keys = HashSet::new();
 
+    // First pass: write existing lines and update values
     for line in original_lines {
-        if let Some((key, original_value)) = line.split_once('=') {
+        if let Some((key, _)) = line.split_once('=') {
             let trimmed_key = key.trim();
             if let Some(value) = env_vars.get(trimmed_key) {
-                let formatted_value = if original_value.trim().starts_with('"')
-                    || original_value.trim().starts_with('\'')
-                {
-                    format!(
-                        "{}{}{}",
-                        &original_value[..1],
-                        value,
-                        &original_value[original_value.len() - 1..]
-                    )
-                } else {
-                    value.to_string()
-                };
-                writeln!(file, "{}={}", trimmed_key, formatted_value)?;
-                written_keys.push(trimmed_key.to_string());
+                if !written_keys.contains(trimmed_key) {
+                    writeln!(file, "{}={}", trimmed_key, value)?;
+                    written_keys.insert(trimmed_key.to_string());
+                }
             } else {
                 writeln!(file, "{}", line)?;
             }
@@ -164,9 +155,9 @@ fn write_env_file(
         }
     }
 
-    // Add any new variables that weren't in the original file
+    // Second pass: write new variables
     for (key, value) in env_vars {
-        if !written_keys.contains(key) {
+        if !written_keys.contains(key.as_str()) {
             writeln!(file, "{}={}", key, value)?;
         }
     }
