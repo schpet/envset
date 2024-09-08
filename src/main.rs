@@ -136,6 +136,8 @@ fn write_env_file(
         .create(true)
         .open(file_path)?;
 
+    let mut written_keys = Vec::new();
+
     for line in original_lines {
         if let Some((key, original_value)) = line.split_once('=') {
             let trimmed_key = key.trim();
@@ -153,6 +155,7 @@ fn write_env_file(
                     value.to_string()
                 };
                 writeln!(file, "{}={}", trimmed_key, formatted_value)?;
+                written_keys.push(trimmed_key.to_string());
             } else {
                 writeln!(file, "{}", line)?;
             }
@@ -163,7 +166,7 @@ fn write_env_file(
 
     // Add any new variables that weren't in the original file
     for (key, value) in env_vars {
-        if !original_lines.iter().any(|line| line.starts_with(key)) {
+        if !written_keys.contains(key) {
             writeln!(file, "{}={}", key, value)?;
         }
     }
