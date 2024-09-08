@@ -4,20 +4,6 @@
 
 this cli was thrown together quickly with [aider](https://aider.chat/)
 
-## installation
-
-### homebrew
-
-```bash
-brew install schpet/tap/envset
-```
-
-### cargo
-
-```bash
-cargo install envset
-```
-
 ## usage
 
 ### set environment variables
@@ -56,3 +42,17 @@ KEY1=value1
 ```
 
 by default, `envset` will create or update a `.env` file in the current directory. if you want to use a different file, you can specify it with the `--file` option.
+
+## installation
+
+### homebrew
+
+```bash
+brew install schpet/tap/envset
+```
+
+### cargo
+
+```bash
+cargo install envset
+```
