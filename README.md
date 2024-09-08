@@ -24,9 +24,6 @@ cargo install envset
 
 ```bash
 envset KEY1=value1 KEY2=value2
-# Output:
-# +KEY1=value1
-# +KEY2=value2
 ```
 
 ```bash
@@ -39,9 +36,6 @@ KEY2=value2
 
 ```bash
 echo -e "KEY1=value1\nKEY2=value2" | envset
-# Output:
-# +KEY1=value1
-# +KEY2=value2
 ```
 
 ```bash
@@ -54,8 +48,6 @@ KEY2=value2
 
 ```bash
 envset --file /path/to/.env KEY1=value1
-# Output:
-# +KEY1=value1
 ```
 
 ```bash
@@ -64,21 +56,3 @@ KEY1=value1
 ```
 
 by default, `envset` will create or update a `.env` file in the current directory. if you want to use a different file, you can specify it with the `--file` option.
-
-### additional options
-
-for more information on available options, run:
-
-```bash
-envset --help
-# Usage: envset [OPTIONS] [VARS]...
-# 
-# Arguments:
-#   [VARS]...  KEY=value pairs to set
-# 
-# Options:
-#   -n, --no-overwrite      Do not overwrite existing variables
-#   -f, --file <FILE>       File path for the .env file [default: .env]
-#   -h, --help              Print help
-#   -V, --version           Print version
-```
