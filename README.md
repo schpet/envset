@@ -47,11 +47,11 @@ KEY2=value2
 ### use a custom .env file location
 
 ```bash
-envset --file /path/to/.env KEY1=value1
+envset --file .env.test KEY1=value1
 ```
 
 ```bash
-# /path/to/.env file contents after running the command:
+# .env.test file contents after running the command:
 KEY1=value1
 ```
 
