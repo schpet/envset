@@ -104,8 +104,12 @@ fn main() {
 }
 
 fn print_all_env_vars() {
+    print_all_env_vars_to_writer(&mut std::io::stdout());
+}
+
+fn print_all_env_vars_to_writer<W: Write>(writer: &mut W) {
     for (key, value) in env::vars() {
-        println!("{} {}", format!("{}=", key).green(), value);
+        writeln!(writer, "{} {}", format!("{}=", key).green(), value).unwrap();
     }
 }
 
