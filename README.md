@@ -84,6 +84,14 @@ envset keys
 
 this command will print all keys from the .env file, without their values.
 
+### delete environment variables
+
+```bash
+envset delete KEY1 KEY2
+```
+
+this command will remove the specified environment variables (KEY1 and KEY2 in this example) from the .env file.
+
 ### prevent overwriting existing variables
 
 ```bash
