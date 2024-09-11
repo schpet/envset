@@ -346,7 +346,7 @@ fn test_print_when_no_args() {
 #[test]
 fn test_pipe_stdin_to_file() {
     use std::io::Write;
-    use std::process::Command;
+    use std::process::{Command, Stdio};
 
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
@@ -357,12 +357,19 @@ fn test_pipe_stdin_to_file() {
     writeln!(input_file, "FOO=bar\nBAZ=qux").unwrap();
 
     // Run the command with piped input
-    let output = Command::new(std::env::current_exe().unwrap())
+    let mut child = Command::new(std::env::current_exe().unwrap())
         .arg("--file")
         .arg(file_path.to_str().unwrap())
-        .stdin(File::open(&input_file_path).unwrap())
-        .output()
-        .expect("Failed to execute command");
+        .stdin(Stdio::piped())
+        .spawn()
+        .expect("Failed to spawn child process");
+
+    {
+        let mut stdin = child.stdin.take().expect("Failed to open stdin");
+        stdin.write_all(b"FOO=bar\nBAZ=qux\n").expect("Failed to write to stdin");
+    }
+
+    let output = child.wait_with_output().expect("Failed to read stdout");
 
     assert!(output.status.success(), "Command failed");
 

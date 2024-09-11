@@ -93,7 +93,13 @@ fn main() {
         None => {}
     }
 
-    if !cli.vars.is_empty() {
+    let new_vars = if atty::is(Stream::Stdin) {
+        parse_args(&cli.vars)
+    } else {
+        parse_stdin()
+    };
+
+    if !new_vars.is_empty() {
         let no_overwrite = cli.no_overwrite;
         let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
             Ok(result) => result,
@@ -108,12 +114,6 @@ fn main() {
         };
 
         let original_env = env_vars.clone();
-
-        let new_vars = if atty::is(Stream::Stdin) {
-            parse_args(&cli.vars)
-        } else {
-            parse_stdin()
-        };
 
         for (key, value) in &new_vars {
             if !env_vars.contains_key(key as &str) || !no_overwrite {
