@@ -385,7 +385,10 @@ fn test_pipe_stdin_to_file() {
     );
 
     // We're not checking the exit status anymore
-    println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
+    println!(
+        "Command output: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
     println!("Command error: {}", String::from_utf8_lossy(&output.stderr));
 
     // Read the resulting .env file
