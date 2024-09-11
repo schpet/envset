@@ -363,13 +363,15 @@ fn test_pipe_stdin_to_file() {
         let mut path = std::env::current_exe().expect("Failed to get current executable path");
         path.pop(); // remove the current executable name
         path.push("envset"); // add the expected executable name
-        path.to_str().expect("Failed to convert path to string").to_string()
+        path.to_str()
+            .expect("Failed to convert path to string")
+            .to_string()
     });
 
     let help_output = Command::new(exe_path.clone())
-    .arg("--help")
-    .output()
-    .expect("Failed to execute --help command");
+        .arg("--help")
+        .output()
+        .expect("Failed to execute --help command");
 
     println!(
         "Help output: {}",
@@ -380,13 +382,13 @@ fn test_pipe_stdin_to_file() {
         String::from_utf8_lossy(&help_output.stderr)
     );
     let mut child = Command::new(exe_path)
-    .arg("-f")
-    .arg(file_path.to_str().unwrap())
-    .stdin(Stdio::piped())
-    .stdout(Stdio::piped())
-    .stderr(Stdio::piped())
-    .spawn()
-    .expect("Failed to spawn child process");
+        .arg("-f")
+        .arg(file_path.to_str().unwrap())
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("Failed to spawn child process");
 
     {
         let mut stdin = child.stdin.take().expect("Failed to open stdin");
