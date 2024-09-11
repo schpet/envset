@@ -57,6 +57,30 @@ you can also specify a custom .env file location when using the `get` subcommand
 envset --file .env.test get KEY1
 ```
 
+### print all environment variables
+
+```bash
+envset print
+```
+
+This command will print all environment variables from the .env file. The output will be colored, with keys in blue and values in green, when outputting to a terminal.
+
+### print all keys
+
+```bash
+envset keys
+```
+
+This command will print all keys from the .env file, without their values.
+
+### prevent overwriting existing variables
+
+```bash
+envset --no-overwrite KEY1=newvalue1
+```
+
+This option prevents overwriting existing variables in the .env file. If a variable already exists, its value will not be changed.
+
 ## installation
 
 ### homebrew
