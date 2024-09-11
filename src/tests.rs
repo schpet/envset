@@ -190,3 +190,29 @@ fn test_get_single_env_var() {
     assert_eq!(env_vars.get("FOO"), Some(&"bar".to_string()));
     assert_eq!(env_vars.get("BAZ"), Some(&"qux".to_string()));
 }
+
+#[test]
+fn test_print_all_env_vars() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
+
+    dotenv::from_path(&file_path).unwrap();
+
+    let mut output = Vec::new();
+    {
+        let mut cursor = Cursor::new(&mut output);
+        print_all_env_vars_to_writer(&mut cursor);
+    }
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("FOO=bar"));
+    assert!(output_str.contains("BAZ=qux"));
+}
+
+fn print_all_env_vars_to_writer<W: Write>(writer: &mut W) {
+    for (key, value) in env::vars() {
+        writeln!(writer, "{} {}", format!("{}=", key).green(), value).unwrap();
+    }
+}
