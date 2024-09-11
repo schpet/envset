@@ -205,10 +205,7 @@ fn test_print_all_env_vars() {
     env::set_var("BAZ", "qux");
 
     let mut output = Vec::new();
-    {
-        let mut cursor = Cursor::new(&mut output);
-        print_all_env_vars_to_writer(&mut cursor);
-    }
+    print_all_env_vars_to_writer(&mut output);
 
     let output_str = String::from_utf8(output).unwrap();
     assert!(
@@ -223,10 +220,4 @@ fn test_print_all_env_vars() {
     // Clean up the environment after the test
     env::remove_var("FOO");
     env::remove_var("BAZ");
-}
-
-fn print_all_env_vars_to_writer<W: Write>(writer: &mut W) {
-    for (key, value) in env::vars() {
-        writeln!(writer, "{} {}", format!("{}=", key).green(), value).unwrap();
-    }
 }

@@ -109,7 +109,7 @@ fn print_all_env_vars() {
 
 fn print_all_env_vars_to_writer<W: Write>(writer: &mut W) {
     for (key, value) in env::vars() {
-        writeln!(writer, "{} {}", format!("{}=", key).green(), value).unwrap();
+        writeln!(writer, "{}={}", key, value).unwrap();
     }
 }
 
