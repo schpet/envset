@@ -61,12 +61,7 @@ fn main() {
             }
         }
         Some(Commands::Print { file }) => {
-            if let Err(e) = dotenv::from_filename(file) {
-                eprintln!("Error loading .env file: {}", e);
-                process::exit(1);
-            }
-
-            print_all_env_vars();
+            print_all_env_vars(file);
         }
         None => {
             let no_overwrite = cli.no_overwrite;
@@ -107,13 +102,17 @@ fn main() {
     }
 }
 
-fn print_all_env_vars() {
-    print_all_env_vars_to_writer(&mut std::io::stdout());
+fn print_all_env_vars(file_path: &str) {
+    print_all_env_vars_to_writer(file_path, &mut std::io::stdout());
 }
 
-fn print_all_env_vars_to_writer<W: Write>(writer: &mut W) {
-    for (key, value) in env::vars() {
-        writeln!(writer, "{}={}", key, value).unwrap();
+fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
+    if let Ok((env_vars, _)) = read_env_file(file_path) {
+        for (key, value) in env_vars {
+            writeln!(writer, "{}={}", key, value).unwrap();
+        }
+    } else {
+        eprintln!("Error reading .env file");
     }
 }
 
