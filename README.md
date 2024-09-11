@@ -2,7 +2,7 @@
 
 `envset` is a command-line tool for setting environment variables in a .env file. it allows you to easily add or update environment variables without manually editing the .env file.
 
-this cli was thrown together quickly with [aider](https://aider.chat/)
+this cli was thrown together quickly with [aider](https://aider.chat/), i also put up [a blog post](https://schpet.com/linklog/envset-updates-env-files) explaining why i made this.
 
 ## usage
 
@@ -32,6 +32,8 @@ KEY2=value2
 
 ### use a custom .env file location
 
+by default, `envset` will create or update a `.env` file in the current directory. if you want to use a different file, you can specify it with the `--file` option.
+
 ```bash
 envset --file .env.test KEY1=value1
 ```
@@ -40,8 +42,6 @@ envset --file .env.test KEY1=value1
 # .env.test file contents after running the command:
 KEY1=value1
 ```
-
-by default, `envset` will create or update a `.env` file in the current directory. if you want to use a different file, you can specify it with the `--file` option.
 
 ### get the value of a single environment variable
 
