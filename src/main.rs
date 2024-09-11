@@ -6,7 +6,7 @@ use std::process;
 
 use envset::{
     parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_file,
-    write_env_file,
+    write_env_file, parse_env_content,
 };
 
 #[cfg(test)]
@@ -46,15 +46,18 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Get { key }) => {
-            if let Err(e) = dotenv::from_filename(&cli.file) {
-                eprintln!("Error loading .env file: {}", e);
-                process::exit(1);
-            }
-
-            match env::var(key) {
-                Ok(value) => println!("{}", value),
-                Err(_) => {
-                    eprintln!("Environment variable '{}' not found", key);
+            match read_env_file(&cli.file) {
+                Ok((env_vars, _)) => {
+                    match env_vars.get(key) {
+                        Some(value) => println!("{}", value),
+                        None => {
+                            eprintln!("Environment variable '{}' not found", key);
+                            process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error reading .env file: {}", e);
                     process::exit(1);
                 }
             }
