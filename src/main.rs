@@ -58,7 +58,13 @@ fn main() {
             }
         },
         Some(Commands::Print) => {
-            print_all_env_vars(&cli.file);
+            if atty::is(Stream::Stdout) {
+                print_all_env_vars(&cli.file);
+            } else {
+                // If not outputting to a terminal, use a plain writer without colors
+                let mut writer = std::io::stdout();
+                envset::print_all_env_vars_to_writer(&cli.file, &mut writer);
+            }
         }
         Some(Commands::Keys) => {
             print_all_keys(&cli.file);

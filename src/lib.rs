@@ -133,7 +133,7 @@ pub fn print_all_env_vars(file_path: &str) {
 pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     if let Ok((env_vars, _)) = read_env_file(file_path) {
         for (key, value) in env_vars {
-            writeln!(writer, "{}={}", key, value).unwrap();
+            writeln!(writer, "{}={}", key.blue().bold(), value.green()).unwrap();
         }
     } else {
         eprintln!("Error reading .env file");
