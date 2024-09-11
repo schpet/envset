@@ -38,6 +38,12 @@ enum Commands {
     Print,
     /// Print all keys in the .env file
     Keys,
+    /// Delete specified environment variables
+    Delete {
+        /// Keys to delete
+        #[arg(required = true)]
+        keys: Vec<String>,
+    },
 }
 
 fn main() {
@@ -68,6 +74,28 @@ fn main() {
         }
         Some(Commands::Keys) => {
             print_all_keys(&cli.file);
+        }
+        Some(Commands::Delete { keys }) => {
+            let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
+                Ok(result) => result,
+                Err(e) => {
+                    eprintln!("Error reading .env file: {}", e);
+                    process::exit(1);
+                }
+            };
+
+            let original_env = env_vars.clone();
+
+            for key in keys {
+                env_vars.remove(&key.split('=').next().unwrap().to_string());
+            }
+
+            if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
+                eprintln!("Error writing .env file: {}", e);
+                process::exit(1);
+            }
+
+            print_diff(&original_env, &env_vars);
         }
         None => {
             let no_overwrite = cli.no_overwrite;
