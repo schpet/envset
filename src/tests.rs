@@ -357,7 +357,7 @@ fn test_pipe_stdin_to_file() {
     writeln!(input_file, "FOO=bar\nBAZ=qux").unwrap();
 
     // Run the command with piped input
-    let output = Command::new(env!("CARGO_BIN_EXE_envset"))
+    let output = Command::new(std::env::current_exe().unwrap())
         .arg("--file")
         .arg(file_path.to_str().unwrap())
         .stdin(File::open(&input_file_path).unwrap())
