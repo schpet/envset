@@ -225,20 +225,18 @@ fn test_print_all_env_vars() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
     let mut file = File::create(&file_path).unwrap();
-    writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
+    writeln!(file, "FOO=bar\nBAZ=qux\nABC=123").unwrap();
 
     let mut output = Vec::new();
     print_all_env_vars_to_writer(file_path.to_str().unwrap(), &mut output);
 
     let output_str = String::from_utf8(output).unwrap();
-    assert!(
-        output_str.contains("FOO") && output_str.contains("bar"),
-        "Output does not contain FOO and bar"
-    );
-    assert!(
-        output_str.contains("BAZ") && output_str.contains("qux"),
-        "Output does not contain BAZ and qux"
-    );
+    let lines: Vec<&str> = output_str.lines().collect();
+    
+    assert_eq!(lines.len(), 3, "Output should contain 3 lines");
+    assert!(lines[0].contains("ABC") && lines[0].contains("123"), "First line should be ABC=123");
+    assert!(lines[1].contains("BAZ") && lines[1].contains("qux"), "Second line should be BAZ=qux");
+    assert!(lines[2].contains("FOO") && lines[2].contains("bar"), "Third line should be FOO=bar");
 }
 
 #[test]
