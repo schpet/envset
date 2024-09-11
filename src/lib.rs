@@ -190,7 +190,7 @@ pub fn print_diff_to_writer<W: Write>(
 }
 
 pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
-    let (env_vars, original_lines) = read_env_file(file_path)?;
+    let (_env_vars, original_lines) = read_env_file(file_path)?;
 
     let updated_lines: Vec<String> = original_lines
         .into_iter()
