@@ -35,7 +35,11 @@ enum Commands {
     /// Get the value of a single environment variable
     Get { key: String },
     /// Print all environment variables
-    Print,
+    Print {
+        /// File path for the .env file
+        #[arg(short, long, default_value = ".env")]
+        file: String,
+    },
 }
 
 fn main() {
@@ -56,8 +60,8 @@ fn main() {
                 }
             }
         }
-        Some(Commands::Print) => {
-            if let Err(e) = dotenv::from_filename(&cli.file) {
+        Some(Commands::Print { file }) => {
+            if let Err(e) = dotenv::from_filename(file) {
                 eprintln!("Error loading .env file: {}", e);
                 process::exit(1);
             }
