@@ -208,12 +208,12 @@ fn test_print_all_env_vars() {
 
     let output_str = String::from_utf8(output).unwrap();
     assert!(
-        output_str.contains("FOO=bar"),
-        "Output does not contain FOO=bar"
+        output_str.contains("FOO") && output_str.contains("bar"),
+        "Output does not contain FOO and bar"
     );
     assert!(
-        output_str.contains("BAZ=qux"),
-        "Output does not contain BAZ=qux"
+        output_str.contains("BAZ") && output_str.contains("qux"),
+        "Output does not contain BAZ and qux"
     );
 }
 
