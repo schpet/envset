@@ -34,6 +34,8 @@ struct Cli {
 enum Commands {
     /// Get the value of a single environment variable
     Get { key: String },
+    /// Print all environment variables
+    Print,
 }
 
 fn main() {
@@ -53,6 +55,14 @@ fn main() {
                     process::exit(1);
                 }
             }
+        }
+        Some(Commands::Print) => {
+            if let Err(e) = dotenv::from_filename(&cli.file) {
+                eprintln!("Error loading .env file: {}", e);
+                process::exit(1);
+            }
+
+            print_all_env_vars();
         }
         None => {
             let no_overwrite = cli.no_overwrite;
@@ -90,6 +100,12 @@ fn main() {
 
             print_diff(&original_env, &env_vars);
         }
+    }
+}
+
+fn print_all_env_vars() {
+    for (key, value) in env::vars() {
+        println!("{} {}", format!("{}=", key).green(), value);
     }
 }
 
