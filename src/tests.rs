@@ -349,9 +349,14 @@ fn test_pipe_stdin_to_file() {
     use std::process::{Command, Stdio};
     use std::thread;
     use std::time::Duration;
+    use std::env;
 
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
+
+    // Set the current working directory to the temp directory
+    let original_dir = env::current_dir().unwrap();
+    env::set_current_dir(&dir).unwrap();
 
     // Run the command with piped input
     let mut child = Command::new(std::env::current_exe().unwrap())
@@ -376,6 +381,9 @@ fn test_pipe_stdin_to_file() {
     thread::sleep(Duration::from_millis(100));
 
     let output = child.wait_with_output().expect("Failed to read stdout");
+
+    // Restore the original working directory
+    env::set_current_dir(original_dir).unwrap();
 
     println!("Debug: File path: {:?}", file_path);
     println!(
