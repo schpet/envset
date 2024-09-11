@@ -97,6 +97,32 @@ fn test_parse_stdin_with_pipe() {
 }
 
 #[test]
+fn test_parse_stdin_and_write_to_file() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+
+    let input = "KEY1=value1\nKEY2=value2\n";
+    let mut cursor = Cursor::new(input);
+    let result = parse_stdin_with_reader(&mut cursor);
+
+    // Write the result to the temporary file
+    write_env_file(file_path.to_str().unwrap(), &result, &[]).unwrap();
+
+    // Read the file contents
+    let contents = fs::read_to_string(&file_path).unwrap();
+
+    // Check if the file contains the expected content
+    assert!(contents.contains("KEY1=value1"));
+    assert!(contents.contains("KEY2=value2"));
+
+    // Read the file using read_env_file and check the result
+    let (env_vars, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    assert_eq!(env_vars.get("KEY1"), Some(&"value1".to_string()));
+    assert_eq!(env_vars.get("KEY2"), Some(&"value2".to_string()));
+    assert_eq!(env_vars.len(), 2);
+}
+
+#[test]
 fn test_print_diff_multiple_vars() {
     let mut original = HashMap::new();
     original.insert("KEY1".to_string(), "old_value1".to_string());
