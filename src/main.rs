@@ -5,8 +5,8 @@ use std::env;
 use std::process;
 
 use envset::{
-    parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_file,
-    write_env_file, parse_env_content,
+    parse_args, parse_env_content, parse_stdin, print_all_env_vars, print_all_keys, print_diff,
+    read_env_file, write_env_file,
 };
 
 #[cfg(test)]
@@ -45,23 +45,19 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Get { key }) => {
-            match read_env_file(&cli.file) {
-                Ok((env_vars, _)) => {
-                    match env_vars.get(key) {
-                        Some(value) => println!("{}", value),
-                        None => {
-                            eprintln!("Environment variable '{}' not found", key);
-                            process::exit(1);
-                        }
-                    }
-                }
-                Err(e) => {
-                    eprintln!("Error reading .env file: {}", e);
+        Some(Commands::Get { key }) => match read_env_file(&cli.file) {
+            Ok((env_vars, _)) => match env_vars.get(key) {
+                Some(value) => println!("{}", value),
+                None => {
+                    eprintln!("Environment variable '{}' not found", key);
                     process::exit(1);
                 }
+            },
+            Err(e) => {
+                eprintln!("Error reading .env file: {}", e);
+                process::exit(1);
             }
-        }
+        },
         Some(Commands::Print) => {
             print_all_env_vars(&cli.file);
         }
