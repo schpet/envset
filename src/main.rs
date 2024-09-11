@@ -93,10 +93,14 @@ fn main() {
         None => {}
     }
 
-    let new_vars = if atty::is(Stream::Stdin) {
-        parse_args(&cli.vars)
+    let new_vars = if !atty::is(Stream::Stdin) || !cli.vars.is_empty() {
+        if !atty::is(Stream::Stdin) {
+            parse_stdin()
+        } else {
+            parse_args(&cli.vars)
+        }
     } else {
-        parse_stdin()
+        HashMap::new()
     };
 
     if !new_vars.is_empty() {
