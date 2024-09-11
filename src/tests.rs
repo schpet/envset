@@ -7,6 +7,7 @@ use envset::{
     parse_args, parse_env_content, parse_stdin_with_reader, print_all_env_vars_to_writer,
     print_all_keys_to_writer, print_diff_to_writer, read_env_file, write_env_file,
 };
+use crate::{Cli, Commands};
 
 #[test]
 fn test_parse_stdin() {
@@ -254,4 +255,37 @@ fn test_print_all_keys() {
     assert!(output_str.contains("FOO"), "Output does not contain FOO");
     assert!(output_str.contains("BAZ"), "Output does not contain BAZ");
     assert!(!output_str.contains("="), "Output should not contain '='");
+}
+
+#[test]
+fn test_print_when_no_args() {
+    use clap::Parser;
+    use std::io::Cursor;
+
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
+
+    // Simulate command-line arguments
+    let args = vec!["envset", "--file", file_path.to_str().unwrap()];
+    let cli = Cli::parse_from(args);
+
+    // Capture stdout
+    let mut output = Vec::new();
+    {
+        let mut cursor = Cursor::new(&mut output);
+        
+        // Run the main logic
+        match &cli.command {
+            Some(Commands::Print) | None => {
+                print_all_env_vars_to_writer(file_path.to_str().unwrap(), &mut cursor);
+            }
+            _ => panic!("Unexpected command"),
+        }
+    }
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("FOO") && output_str.contains("bar"), "Output does not contain FOO and bar");
+    assert!(output_str.contains("BAZ") && output_str.contains("qux"), "Output does not contain BAZ and qux");
 }
