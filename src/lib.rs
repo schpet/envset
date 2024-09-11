@@ -196,5 +196,6 @@ pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> 
         env_vars.remove(key);
     }
 
-    write_env_file(file_path, &env_vars, &original_lines)
+    write_env_file(file_path, &env_vars, &original_lines)?;
+    Ok(())
 }
