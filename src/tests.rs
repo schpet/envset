@@ -351,24 +351,18 @@ fn test_pipe_stdin_to_file() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
 
-    // Create a temporary file to simulate piping
-    let input_file_path = dir.path().join("input.txt");
-    let mut input_file = File::create(&input_file_path).unwrap();
-    writeln!(input_file, "FOO=bar\nBAZ=qux").unwrap();
-
     // Run the command with piped input
     let mut child = Command::new(std::env::current_exe().unwrap())
-        .arg("--file")
+        .arg("-f")
         .arg(file_path.to_str().unwrap())
         .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
         .spawn()
         .expect("Failed to spawn child process");
 
     {
         let mut stdin = child.stdin.take().expect("Failed to open stdin");
-        stdin
-            .write_all(b"FOO=bar\nBAZ=qux\n")
-            .expect("Failed to write to stdin");
+        stdin.write_all(b"FOO=bar\nBAZ=qux\n").expect("Failed to write to stdin");
     }
 
     let output = child.wait_with_output().expect("Failed to read stdout");
