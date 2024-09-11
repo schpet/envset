@@ -185,6 +185,26 @@ fn test_keep_last_occurrence_of_duplicate_keys() {
 }
 
 #[test]
+fn test_delete_env_vars() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let initial_content = "FOO=bar\nBAZ=qux\nQUUX=quux\n";
+    fs::write(&file_path, initial_content).unwrap();
+
+    let keys_to_delete = vec!["FOO".to_string(), "QUUX".to_string()];
+    envset::delete_env_vars(file_path.to_str().unwrap(), &keys_to_delete).unwrap();
+
+    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    assert!(!result.contains_key("FOO"));
+    assert!(result.contains_key("BAZ"));
+    assert!(!result.contains_key("QUUX"));
+    assert_eq!(result.len(), 1);
+
+    let final_content = fs::read_to_string(&file_path).unwrap();
+    assert_eq!(final_content, "BAZ=qux\n");
+}
+
+#[test]
 fn test_get_single_env_var() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
