@@ -76,7 +76,7 @@ fn main() {
             print_all_keys(&cli.file);
         }
         Some(Commands::Delete { keys }) => {
-            let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
+            let (env_vars, _) = match read_env_file(&cli.file) {
                 Ok(result) => result,
                 Err(e) => {
                     eprintln!("Error reading .env file: {}", e);
@@ -86,16 +86,13 @@ fn main() {
 
             let original_env = env_vars.clone();
 
-            for key in keys {
-                env_vars.remove(&key.split('=').next().unwrap().to_string());
-            }
-
-            if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
-                eprintln!("Error writing .env file: {}", e);
+            if let Err(e) = envset::delete_env_vars(&cli.file, keys) {
+                eprintln!("Error deleting environment variables: {}", e);
                 process::exit(1);
             }
 
-            print_diff(&original_env, &env_vars);
+            let (updated_env, _) = read_env_file(&cli.file).unwrap();
+            print_diff(&original_env, &updated_env);
         }
         None => {
             let no_overwrite = cli.no_overwrite;

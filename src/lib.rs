@@ -193,7 +193,7 @@ pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> 
     let (mut env_vars, original_lines) = read_env_file(file_path)?;
 
     for key in keys {
-        env_vars.remove(&key.split('=').next().unwrap().to_string());
+        env_vars.remove(key);
     }
 
     write_env_file(file_path, &env_vars, &original_lines)
