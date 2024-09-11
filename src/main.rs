@@ -23,7 +23,7 @@ struct Cli {
     no_overwrite: bool,
 
     /// File path for the .env file
-    #[arg(short, long, default_value = ".env")]
+    #[arg(short, long, default_value = ".env", global = true)]
     file: String,
 
     /// KEY=value pairs to set
@@ -36,30 +36,19 @@ enum Commands {
     /// Get the value of a single environment variable
     Get {
         key: String,
-        /// File path for the .env file
-        #[arg(short, long, default_value = ".env")]
-        file: String,
     },
     /// Print all environment variables
-    Print {
-        /// File path for the .env file
-        #[arg(short, long, default_value = ".env")]
-        file: String,
-    },
+    Print,
     /// Print all keys in the .env file
-    Keys {
-        /// File path for the .env file
-        #[arg(short, long, default_value = ".env")]
-        file: String,
-    },
+    Keys,
 }
 
 fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Get { key, file }) => {
-            if let Err(e) = dotenv::from_filename(file) {
+        Some(Commands::Get { key }) => {
+            if let Err(e) = dotenv::from_filename(&cli.file) {
                 eprintln!("Error loading .env file: {}", e);
                 process::exit(1);
             }
@@ -72,16 +61,15 @@ fn main() {
                 }
             }
         }
-        Some(Commands::Print { file }) => {
-            print_all_env_vars(file);
+        Some(Commands::Print) => {
+            print_all_env_vars(&cli.file);
         }
-        Some(Commands::Keys { file }) => {
-            print_all_keys(file);
+        Some(Commands::Keys) => {
+            print_all_keys(&cli.file);
         }
         None => {
             let no_overwrite = cli.no_overwrite;
-            let env_file = &cli.file;
-            let (mut env_vars, original_lines) = match read_env_file(env_file) {
+            let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
                 Ok(result) => result,
                 Err(e) => {
                     if e.kind() == std::io::ErrorKind::NotFound {
