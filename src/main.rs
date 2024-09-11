@@ -22,7 +22,7 @@ struct Cli {
     no_overwrite: bool,
 
     /// File path for the .env file
-    #[arg(short, long, default_value = ".env", global = true)]
+    #[arg(short = 'f', long = "file", default_value = ".env", global = true)]
     file: String,
 
     /// KEY=value pairs to set
