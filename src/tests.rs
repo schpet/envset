@@ -395,7 +395,8 @@ fn test_no_print_when_vars_set_via_stdin() {
         // Run the main logic
         let new_vars = parse_stdin_with_reader(&mut stdin);
         if !new_vars.is_empty() {
-            let (mut env_vars, original_lines) = read_env_file(file_path.to_str().unwrap()).unwrap();
+            let (mut env_vars, original_lines) =
+                read_env_file(file_path.to_str().unwrap()).unwrap();
             let original_env = env_vars.clone();
             env_vars.extend(new_vars);
             write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
@@ -406,6 +407,12 @@ fn test_no_print_when_vars_set_via_stdin() {
     }
 
     let output_str = String::from_utf8(output).unwrap();
-    assert!(output_str.contains("+NEW_VAR=new_value"), "Diff output should show the new variable");
-    assert!(!output_str.contains("EXISTING=value"), "Full env vars should not be printed");
+    assert!(
+        output_str.contains("+NEW_VAR=new_value"),
+        "Diff output should show the new variable"
+    );
+    assert!(
+        !output_str.contains("EXISTING=value"),
+        "Full env vars should not be printed"
+    );
 }
