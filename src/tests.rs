@@ -353,7 +353,7 @@ fn test_pipe_stdin_to_file() {
 
     // Run the command with piped input
     let mut child = Command::new(std::env::current_exe().unwrap())
-        .arg("-f")
+        .arg("--file")
         .arg(file_path.to_str().unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -384,7 +384,13 @@ fn test_pipe_stdin_to_file() {
         String::from_utf8_lossy(&output.stderr)
     );
 
-    assert!(output.status.success(), "Command failed");
+    assert!(
+        output.status.success(),
+        "Command failed with status: {:?}\nStdout: {}\nStderr: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     // Read the resulting .env file
     let env_content = fs::read_to_string(&file_path).unwrap();
