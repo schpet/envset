@@ -49,7 +49,7 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
 
-    let should_print = cli.command.is_none() && cli.vars.is_empty();
+    let mut should_print = cli.command.is_none() && cli.vars.is_empty();
 
     match &cli.command {
         Some(Commands::Get { key }) => match read_env_file(&cli.file) {
