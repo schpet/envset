@@ -347,6 +347,8 @@ fn test_print_when_no_args() {
 fn test_pipe_stdin_to_file() {
     use std::io::Write;
     use std::process::{Command, Stdio};
+    use std::thread;
+    use std::time::Duration;
 
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
@@ -357,6 +359,7 @@ fn test_pipe_stdin_to_file() {
         .arg(file_path.to_str().unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()
         .expect("Failed to spawn child process");
 
@@ -365,7 +368,12 @@ fn test_pipe_stdin_to_file() {
         stdin
             .write_all(b"FOO=bar\nBAZ=qux\n")
             .expect("Failed to write to stdin");
+        // Explicitly close stdin to signal EOF
+        drop(stdin);
     }
+
+    // Give the child process some time to process the input and write to the file
+    thread::sleep(Duration::from_millis(100));
 
     let output = child.wait_with_output().expect("Failed to read stdout");
 
@@ -392,14 +400,16 @@ fn test_pipe_stdin_to_file() {
     println!("Command error: {}", String::from_utf8_lossy(&output.stderr));
 
     // Read the resulting .env file
-    let env_content = fs::read_to_string(&file_path).unwrap();
+    let env_content = fs::read_to_string(&file_path).expect("Failed to read .env file");
 
     assert!(
         env_content.contains("FOO=bar"),
-        "FOO=bar not found in .env file"
+        "FOO=bar not found in .env file. File contents: {:?}",
+        env_content
     );
     assert!(
         env_content.contains("BAZ=qux"),
-        "BAZ=qux not found in .env file"
+        "BAZ=qux not found in .env file. File contents: {:?}",
+        env_content
     );
 }
