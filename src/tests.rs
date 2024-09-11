@@ -370,10 +370,19 @@ fn test_pipe_stdin_to_file() {
     let output = child.wait_with_output().expect("Failed to read stdout");
 
     println!("Debug: File path: {:?}", file_path);
-    println!("Debug: Executable path: {:?}", std::env::current_exe().unwrap());
+    println!(
+        "Debug: Executable path: {:?}",
+        std::env::current_exe().unwrap()
+    );
     println!("Debug: Command exit status: {:?}", output.status);
-    println!("Debug: Command stdout: {}", String::from_utf8_lossy(&output.stdout));
-    println!("Debug: Command stderr: {}", String::from_utf8_lossy(&output.stderr));
+    println!(
+        "Debug: Command stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    println!(
+        "Debug: Command stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
 
     assert!(output.status.success(), "Command failed");
 
