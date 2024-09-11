@@ -21,7 +21,6 @@ path = "src/main.rs"
 clap = { version = "4.5.17", features = ["derive"] }
 colored = "2.0"
 atty = "0.2"
-dotenv = "0.15.0"
 
 [dev-dependencies]
 tempfile = "3.2"
