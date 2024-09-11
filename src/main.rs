@@ -1,7 +1,9 @@
 use atty::Stream;
 use clap::Parser;
 use colored::Colorize;
+use dotenv::dotenv;
 use std::collections::{HashMap, HashSet};
+use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
@@ -40,18 +42,14 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Get { key }) => {
-            let env_file = &cli.file;
-            let (env_vars, _) = match read_env_file(env_file) {
-                Ok(result) => result,
-                Err(e) => {
-                    eprintln!("Error reading .env file: {}", e);
-                    process::exit(1);
-                }
-            };
+            if let Err(e) = dotenv::from_filename(&cli.file) {
+                eprintln!("Error loading .env file: {}", e);
+                process::exit(1);
+            }
 
-            match env_vars.get(key) {
-                Some(value) => println!("{}", value),
-                None => {
+            match env::var(key) {
+                Ok(value) => println!("{}", value),
+                Err(_) => {
                     eprintln!("Environment variable '{}' not found", key);
                     process::exit(1);
                 }
