@@ -49,7 +49,7 @@ by default, `envset` will create or update a `.env` file in the current director
 envset get KEY1
 ```
 
-This command will print the value of KEY1 from the .env file. If the variable is not found, it will print an error message.
+this command will print the value of KEY1 from the .env file. if the variable is not found, it will print an error message.
 
 you can also specify a custom .env file location when using the `get` subcommand:
 
@@ -63,7 +63,7 @@ envset --file .env.test get KEY1
 envset print
 ```
 
-This command will print all environment variables from the .env file. The output will be colored, with keys in blue and values in green, when outputting to a terminal.
+this command will print all environment variables from the .env file. the output will be colored, with keys in blue and values in green, when outputting to a terminal.
 
 ### print all keys
 
@@ -71,7 +71,7 @@ This command will print all environment variables from the .env file. The output
 envset keys
 ```
 
-This command will print all keys from the .env file, without their values.
+this command will print all keys from the .env file, without their values.
 
 ### prevent overwriting existing variables
 
@@ -79,7 +79,7 @@ This command will print all keys from the .env file, without their values.
 envset --no-overwrite KEY1=newvalue1
 ```
 
-This option prevents overwriting existing variables in the .env file. If a variable already exists, its value will not be changed.
+this option prevents overwriting existing variables in the .env file. if a variable already exists, its value will not be changed.
 
 ## installation
 
