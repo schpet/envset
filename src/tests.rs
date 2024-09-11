@@ -359,9 +359,14 @@ fn test_pipe_stdin_to_file() {
     env::set_current_dir(&dir).unwrap();
 
     // Call --help and print the output
-    let help_output = Command::new(
-        std::env::var("CARGO_BIN_EXE_envset").expect("CARGO_BIN_EXE_envset not defined"),
-    )
+    let exe_path = std::env::var("CARGO_BIN_EXE_envset").unwrap_or_else(|_| {
+        let mut path = std::env::current_exe().expect("Failed to get current executable path");
+        path.pop(); // remove the current executable name
+        path.push("envset"); // add the expected executable name
+        path.to_str().expect("Failed to convert path to string").to_string()
+    });
+
+    let help_output = Command::new(exe_path.clone())
     .arg("--help")
     .output()
     .expect("Failed to execute --help command");
@@ -374,9 +379,7 @@ fn test_pipe_stdin_to_file() {
         "Help error: {}",
         String::from_utf8_lossy(&help_output.stderr)
     );
-    let mut child = Command::new(
-        std::env::var("CARGO_BIN_EXE_envset").expect("CARGO_BIN_EXE_envset not defined"),
-    )
+    let mut child = Command::new(exe_path)
     .arg("-f")
     .arg(file_path.to_str().unwrap())
     .stdin(Stdio::piped())
