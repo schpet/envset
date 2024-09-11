@@ -368,3 +368,44 @@ fn test_print_when_no_args() {
         "Output does not contain BAZ and qux"
     );
 }
+
+#[test]
+fn test_no_print_when_vars_set_via_stdin() {
+    use clap::Parser;
+    use std::io::Cursor;
+
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "EXISTING=value").unwrap();
+
+    // Simulate command-line arguments
+    let args = vec!["envset", "--file", file_path.to_str().unwrap()];
+    let cli = Cli::parse_from(args);
+
+    // Simulate stdin input
+    let stdin_input = "NEW_VAR=new_value\n";
+    let mut stdin = Cursor::new(stdin_input);
+
+    // Capture stdout
+    let mut output = Vec::new();
+    {
+        let mut stdout = Cursor::new(&mut output);
+
+        // Run the main logic
+        let new_vars = parse_stdin_with_reader(&mut stdin);
+        if !new_vars.is_empty() {
+            let (mut env_vars, original_lines) = read_env_file(file_path.to_str().unwrap()).unwrap();
+            let original_env = env_vars.clone();
+            env_vars.extend(new_vars);
+            write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+            print_diff_to_writer(&original_env, &env_vars, &mut stdout);
+        } else if cli.command.is_none() {
+            print_all_env_vars_to_writer(file_path.to_str().unwrap(), &mut stdout);
+        }
+    }
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("+NEW_VAR=new_value"), "Diff output should show the new variable");
+    assert!(!output_str.contains("EXISTING=value"), "Full env vars should not be printed");
+}
