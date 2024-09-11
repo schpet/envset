@@ -358,7 +358,14 @@ fn test_pipe_stdin_to_file() {
     let original_dir = env::current_dir().unwrap();
     env::set_current_dir(&dir).unwrap();
 
-    // Run the command with piped input
+    // Call --help and print the output
+    let help_output = Command::new(std::env::current_exe().unwrap())
+        .arg("--help")
+        .output()
+        .expect("Failed to execute --help command");
+
+    println!("Help output: {}", String::from_utf8_lossy(&help_output.stdout));
+    println!("Help error: {}", String::from_utf8_lossy(&help_output.stderr));
     let mut child = Command::new(std::env::current_exe().unwrap())
         .arg("-f")
         .arg(file_path.to_str().unwrap())
