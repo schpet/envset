@@ -1,7 +1,6 @@
 use atty::Stream;
 use clap::Parser;
 use colored::Colorize;
-use dotenv::dotenv;
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, OpenOptions};
