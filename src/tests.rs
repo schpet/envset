@@ -362,7 +362,9 @@ fn test_pipe_stdin_to_file() {
 
     {
         let mut stdin = child.stdin.take().expect("Failed to open stdin");
-        stdin.write_all(b"FOO=bar\nBAZ=qux\n").expect("Failed to write to stdin");
+        stdin
+            .write_all(b"FOO=bar\nBAZ=qux\n")
+            .expect("Failed to write to stdin");
     }
 
     let output = child.wait_with_output().expect("Failed to read stdout");
