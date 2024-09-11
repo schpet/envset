@@ -252,7 +252,12 @@ fn test_no_print_when_args_provided() {
     writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
 
     // Simulate command-line arguments with vars
-    let args = vec!["envset", "--file", file_path.to_str().unwrap(), "NEW_VAR=value"];
+    let args = vec![
+        "envset",
+        "--file",
+        file_path.to_str().unwrap(),
+        "NEW_VAR=value",
+    ];
     let cli = Cli::parse_from(args);
 
     // Capture stdout
