@@ -345,11 +345,11 @@ fn test_print_when_no_args() {
 
 #[test]
 fn test_pipe_stdin_to_file() {
+    use std::env;
     use std::io::Write;
     use std::process::{Command, Stdio};
     use std::thread;
     use std::time::Duration;
-    use std::env;
 
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
