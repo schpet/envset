@@ -345,8 +345,8 @@ fn test_print_when_no_args() {
 
 #[test]
 fn test_pipe_stdin_to_file() {
-    use std::process::Command;
     use std::io::Write;
+    use std::process::Command;
 
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
@@ -368,7 +368,13 @@ fn test_pipe_stdin_to_file() {
 
     // Read the resulting .env file
     let env_content = fs::read_to_string(&file_path).unwrap();
-    
-    assert!(env_content.contains("FOO=bar"), "FOO=bar not found in .env file");
-    assert!(env_content.contains("BAZ=qux"), "BAZ=qux not found in .env file");
+
+    assert!(
+        env_content.contains("FOO=bar"),
+        "FOO=bar not found in .env file"
+    );
+    assert!(
+        env_content.contains("BAZ=qux"),
+        "BAZ=qux not found in .env file"
+    );
 }
