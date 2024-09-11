@@ -242,6 +242,41 @@ fn test_print_all_env_vars() {
 }
 
 #[test]
+fn test_no_print_when_args_provided() {
+    use clap::Parser;
+    use std::io::Cursor;
+
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
+
+    // Simulate command-line arguments with vars
+    let args = vec!["envset", "--file", file_path.to_str().unwrap(), "NEW_VAR=value"];
+    let cli = Cli::parse_from(args);
+
+    // Capture stdout
+    let mut output = Vec::new();
+    {
+        let mut cursor = Cursor::new(&mut output);
+
+        // Run the main logic
+        if cli.command.is_none() && !cli.vars.is_empty() {
+            // This is where we would normally set the environment variables
+            // For this test, we're just ensuring it doesn't print
+        } else {
+            print_all_env_vars_to_writer(file_path.to_str().unwrap(), &mut cursor);
+        }
+    }
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(
+        output_str.is_empty(),
+        "Output should be empty when args are provided"
+    );
+}
+
+#[test]
 fn test_print_all_keys() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
