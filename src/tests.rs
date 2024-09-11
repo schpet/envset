@@ -359,10 +359,12 @@ fn test_pipe_stdin_to_file() {
     env::set_current_dir(&dir).unwrap();
 
     // Call --help and print the output
-    let help_output = Command::new(std::env::var("CARGO_BIN_EXE_envset").expect("CARGO_BIN_EXE_envset not defined"))
-        .arg("--help")
-        .output()
-        .expect("Failed to execute --help command");
+    let help_output = Command::new(
+        std::env::var("CARGO_BIN_EXE_envset").expect("CARGO_BIN_EXE_envset not defined"),
+    )
+    .arg("--help")
+    .output()
+    .expect("Failed to execute --help command");
 
     println!(
         "Help output: {}",
@@ -372,14 +374,16 @@ fn test_pipe_stdin_to_file() {
         "Help error: {}",
         String::from_utf8_lossy(&help_output.stderr)
     );
-    let mut child = Command::new(std::env::var("CARGO_BIN_EXE_envset").expect("CARGO_BIN_EXE_envset not defined"))
-        .arg("-f")
-        .arg(file_path.to_str().unwrap())
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("Failed to spawn child process");
+    let mut child = Command::new(
+        std::env::var("CARGO_BIN_EXE_envset").expect("CARGO_BIN_EXE_envset not defined"),
+    )
+    .arg("-f")
+    .arg(file_path.to_str().unwrap())
+    .stdin(Stdio::piped())
+    .stdout(Stdio::piped())
+    .stderr(Stdio::piped())
+    .spawn()
+    .expect("Failed to spawn child process");
 
     {
         let mut stdin = child.stdin.take().expect("Failed to open stdin");
