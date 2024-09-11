@@ -1,10 +1,10 @@
 # envset
 
-`envset` is a CLI for setting environment variables in a .env file. 
+`envset` is a CLI for setting environment variables in .env files.
 
 ## installation
 
-avaialble via homebrew and cargo:
+available on homebrew and cargo:
 
 ```bash
 brew install schpet/tap/envset
