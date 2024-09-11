@@ -195,7 +195,10 @@ fn test_delete_env_vars() {
     envset::delete_env_vars(file_path.to_str().unwrap(), &keys_to_delete).unwrap();
 
     let final_content = fs::read_to_string(&file_path).unwrap();
-    assert_eq!(final_content, "BAZ=qux\n", "Final content should only contain BAZ=qux");
+    assert_eq!(
+        final_content, "BAZ=qux\n",
+        "Final content should only contain BAZ=qux"
+    );
 
     let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert!(!result.contains_key("FOO"), "FOO should be deleted");
