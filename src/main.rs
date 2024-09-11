@@ -104,6 +104,7 @@ fn main() {
     };
 
     if !new_vars.is_empty() {
+        should_print = false;  // Don't print all vars when setting new ones
         let no_overwrite = cli.no_overwrite;
         let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
             Ok(result) => result,
