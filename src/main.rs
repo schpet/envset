@@ -33,7 +33,12 @@ struct Cli {
 #[derive(clap::Subcommand)]
 enum Commands {
     /// Get the value of a single environment variable
-    Get { key: String },
+    Get {
+        key: String,
+        /// File path for the .env file
+        #[arg(short, long, default_value = ".env")]
+        file: String,
+    },
     /// Print all environment variables
     Print {
         /// File path for the .env file
@@ -46,8 +51,8 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Get { key }) => {
-            if let Err(e) = dotenv::from_filename(&cli.file) {
+        Some(Commands::Get { key, file }) => {
+            if let Err(e) = dotenv::from_filename(file) {
                 eprintln!("Error loading .env file: {}", e);
                 process::exit(1);
             }
