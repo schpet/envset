@@ -4,6 +4,17 @@
 
 this cli was thrown together quickly with [aider](https://aider.chat/), i also put up [a blog post](https://schpet.com/linklog/envset-updates-env-files) explaining why i made this.
 
+## installation
+
+avaialble via homebrew and cargo:
+
+```bash
+brew install schpet/tap/envset
+```
+```bash
+cargo install envset
+```
+
 ## usage
 
 ### set environment variables
@@ -80,17 +91,3 @@ envset --no-overwrite KEY1=newvalue1
 ```
 
 this option prevents overwriting existing variables in the .env file. if a variable already exists, its value will not be changed.
-
-## installation
-
-### homebrew
-
-```bash
-brew install schpet/tap/envset
-```
-
-### cargo
-
-```bash
-cargo install envset
-```
