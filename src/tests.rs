@@ -364,8 +364,14 @@ fn test_pipe_stdin_to_file() {
         .output()
         .expect("Failed to execute --help command");
 
-    println!("Help output: {}", String::from_utf8_lossy(&help_output.stdout));
-    println!("Help error: {}", String::from_utf8_lossy(&help_output.stderr));
+    println!(
+        "Help output: {}",
+        String::from_utf8_lossy(&help_output.stdout)
+    );
+    println!(
+        "Help error: {}",
+        String::from_utf8_lossy(&help_output.stderr)
+    );
     let mut child = Command::new(std::env::current_exe().unwrap())
         .arg("-f")
         .arg(file_path.to_str().unwrap())
