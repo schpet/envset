@@ -3,7 +3,10 @@ use std::fs::{self, File};
 use std::io::{Cursor, Write};
 use tempfile::tempdir;
 
-use super::*;
+use envset::{
+    parse_args, parse_env_content, parse_stdin_with_reader, print_all_env_vars_to_writer,
+    print_diff_to_writer, read_env_file, write_env_file,
+};
 
 #[test]
 fn test_parse_stdin() {
@@ -81,6 +84,7 @@ fn test_preserve_comments() {
     assert!(contents.contains("FOO='bar'"));
     assert!(contents.contains("BAZ=qux"));
 }
+
 #[test]
 fn test_parse_stdin_with_pipe() {
     let input = "KEY1=value1\nKEY2=value2\n";

@@ -9,6 +9,14 @@ repository = "https://github.com/schpet/envset"
 keywords = ["env", "environment", "dotenv", "cli"]
 categories = ["command-line-utilities", "config"]
 
+[lib]
+name = "envset"
+path = "src/lib.rs"
+
+[[bin]]
+name = "envset"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "4.5.17", features = ["derive"] }
 colored = "2.0"
