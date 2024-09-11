@@ -201,7 +201,10 @@ fn test_delete_env_vars() {
     assert_eq!(result.len(), 1, "Only one key should remain");
 
     let final_content = fs::read_to_string(&file_path).unwrap();
-    assert_eq!(final_content, "BAZ=qux\n", "Final content should only contain BAZ=qux");
+    assert_eq!(
+        final_content, "BAZ=qux\n",
+        "Final content should only contain BAZ=qux"
+    );
 }
 
 #[test]
