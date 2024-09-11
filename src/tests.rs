@@ -342,3 +342,33 @@ fn test_print_when_no_args() {
         "Output does not contain BAZ and qux"
     );
 }
+
+#[test]
+fn test_pipe_stdin_to_file() {
+    use std::process::Command;
+    use std::io::Write;
+
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+
+    // Create a temporary file to simulate piping
+    let input_file_path = dir.path().join("input.txt");
+    let mut input_file = File::create(&input_file_path).unwrap();
+    writeln!(input_file, "FOO=bar\nBAZ=qux").unwrap();
+
+    // Run the command with piped input
+    let output = Command::new(env!("CARGO_BIN_EXE_envset"))
+        .arg("--file")
+        .arg(file_path.to_str().unwrap())
+        .stdin(File::open(&input_file_path).unwrap())
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(output.status.success(), "Command failed");
+
+    // Read the resulting .env file
+    let env_content = fs::read_to_string(&file_path).unwrap();
+    
+    assert!(env_content.contains("FOO=bar"), "FOO=bar not found in .env file");
+    assert!(env_content.contains("BAZ=qux"), "BAZ=qux not found in .env file");
+}
