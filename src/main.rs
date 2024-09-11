@@ -63,7 +63,7 @@ fn main() {
                 process::exit(1);
             }
         },
-        Some(Commands::Print) => {
+        Some(Commands::Print) | None => {
             if atty::is(Stream::Stdout) {
                 print_all_env_vars(&cli.file);
             } else {
@@ -94,40 +94,41 @@ fn main() {
             let (updated_env, _) = read_env_file(&cli.file).unwrap();
             print_diff(&original_env, &updated_env);
         }
-        None => {
-            let no_overwrite = cli.no_overwrite;
-            let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
-                Ok(result) => result,
-                Err(e) => {
-                    if e.kind() == std::io::ErrorKind::NotFound {
-                        (HashMap::new(), Vec::new())
-                    } else {
-                        eprintln!("Error reading .env file: {}", e);
-                        process::exit(1);
-                    }
-                }
-            };
+    }
 
-            let original_env = env_vars.clone();
-
-            let new_vars = if atty::is(Stream::Stdin) {
-                parse_args(&cli.vars)
-            } else {
-                parse_stdin()
-            };
-
-            for (key, value) in &new_vars {
-                if !env_vars.contains_key(key as &str) || !no_overwrite {
-                    env_vars.insert(key.clone(), value.clone());
+    if cli.command.is_none() && !cli.vars.is_empty() {
+        let no_overwrite = cli.no_overwrite;
+        let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
+            Ok(result) => result,
+            Err(e) => {
+                if e.kind() == std::io::ErrorKind::NotFound {
+                    (HashMap::new(), Vec::new())
+                } else {
+                    eprintln!("Error reading .env file: {}", e);
+                    process::exit(1);
                 }
             }
+        };
 
-            if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
-                eprintln!("Error writing .env file: {}", e);
-                process::exit(1);
+        let original_env = env_vars.clone();
+
+        let new_vars = if atty::is(Stream::Stdin) {
+            parse_args(&cli.vars)
+        } else {
+            parse_stdin()
+        };
+
+        for (key, value) in &new_vars {
+            if !env_vars.contains_key(key as &str) || !no_overwrite {
+                env_vars.insert(key.clone(), value.clone());
             }
-
-            print_diff(&original_env, &env_vars);
         }
+
+        if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
+            eprintln!("Error writing .env file: {}", e);
+            process::exit(1);
+        }
+
+        print_diff(&original_env, &env_vars);
     }
 }
