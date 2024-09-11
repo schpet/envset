@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::process;
 
 use envset::{
-    parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff,
-    read_env_file, write_env_file,
+    parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_file,
+    write_env_file,
 };
 
 #[cfg(test)]
