@@ -1,6 +1,5 @@
 use atty::Stream;
 use clap::Parser;
-use colored::Colorize;
 use std::collections::HashMap;
 use std::env;
 use std::process;
