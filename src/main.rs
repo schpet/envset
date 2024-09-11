@@ -34,9 +34,7 @@ struct Cli {
 #[derive(clap::Subcommand)]
 enum Commands {
     /// Get the value of a single environment variable
-    Get {
-        key: String,
-    },
+    Get { key: String },
     /// Print all environment variables
     Print,
     /// Print all keys in the .env file
