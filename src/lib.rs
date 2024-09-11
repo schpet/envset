@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
+use colored::Colorize;
 
 pub fn read_env_file(
     file_path: &str,
