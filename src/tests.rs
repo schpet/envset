@@ -360,7 +360,7 @@ fn test_pipe_stdin_to_file() {
 
     // Run the command with piped input
     let mut child = Command::new(std::env::current_exe().unwrap())
-        .arg("--file")
+        .arg("-f")
         .arg(file_path.to_str().unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
