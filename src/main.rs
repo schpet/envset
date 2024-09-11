@@ -45,6 +45,12 @@ enum Commands {
         #[arg(short, long, default_value = ".env")]
         file: String,
     },
+    /// Print all keys in the .env file
+    Keys {
+        /// File path for the .env file
+        #[arg(short, long, default_value = ".env")]
+        file: String,
+    },
 }
 
 fn main() {
@@ -67,6 +73,9 @@ fn main() {
         }
         Some(Commands::Print { file }) => {
             print_all_env_vars(file);
+        }
+        Some(Commands::Keys { file }) => {
+            print_all_keys(file);
         }
         None => {
             let no_overwrite = cli.no_overwrite;

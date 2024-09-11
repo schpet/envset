@@ -216,3 +216,19 @@ fn test_print_all_env_vars() {
         "Output does not contain BAZ=qux"
     );
 }
+
+#[test]
+fn test_print_all_keys() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    let mut file = File::create(&file_path).unwrap();
+    writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
+
+    let mut output = Vec::new();
+    print_all_keys_to_writer(file_path.to_str().unwrap(), &mut output);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("FOO"), "Output does not contain FOO");
+    assert!(output_str.contains("BAZ"), "Output does not contain BAZ");
+    assert!(!output_str.contains("="), "Output should not contain '='");
+}

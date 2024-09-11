@@ -140,6 +140,20 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     }
 }
 
+pub fn print_all_keys(file_path: &str) {
+    print_all_keys_to_writer(file_path, &mut std::io::stdout());
+}
+
+pub fn print_all_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
+    if let Ok((env_vars, _)) = read_env_file(file_path) {
+        for key in env_vars.keys() {
+            writeln!(writer, "{}", key).unwrap();
+        }
+    } else {
+        eprintln!("Error reading .env file");
+    }
+}
+
 pub fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, String>) {
     print_diff_to_writer(original, updated, &mut std::io::stdout());
 }
