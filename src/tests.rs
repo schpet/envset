@@ -200,6 +200,10 @@ fn test_print_all_env_vars() {
 
     dotenv::from_path(&file_path).unwrap();
 
+    // Explicitly set the environment variables
+    env::set_var("FOO", "bar");
+    env::set_var("BAZ", "qux");
+
     let mut output = Vec::new();
     {
         let mut cursor = Cursor::new(&mut output);
@@ -207,8 +211,12 @@ fn test_print_all_env_vars() {
     }
 
     let output_str = String::from_utf8(output).unwrap();
-    assert!(output_str.contains("FOO=bar"));
-    assert!(output_str.contains("BAZ=qux"));
+    assert!(output_str.contains("FOO=bar"), "Output does not contain FOO=bar");
+    assert!(output_str.contains("BAZ=qux"), "Output does not contain BAZ=qux");
+
+    // Clean up the environment after the test
+    env::remove_var("FOO");
+    env::remove_var("BAZ");
 }
 
 fn print_all_env_vars_to_writer<W: Write>(writer: &mut W) {
