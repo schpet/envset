@@ -3,11 +3,11 @@ use std::fs::{self, File};
 use std::io::{Cursor, Write};
 use tempfile::tempdir;
 
+use crate::{Cli, Commands};
 use envset::{
     parse_args, parse_env_content, parse_stdin_with_reader, print_all_env_vars_to_writer,
     print_all_keys_to_writer, print_diff_to_writer, read_env_file, write_env_file,
 };
-use crate::{Cli, Commands};
 
 #[test]
 fn test_parse_stdin() {
@@ -275,7 +275,7 @@ fn test_print_when_no_args() {
     let mut output = Vec::new();
     {
         let mut cursor = Cursor::new(&mut output);
-        
+
         // Run the main logic
         match &cli.command {
             Some(Commands::Print) | None => {
@@ -286,6 +286,12 @@ fn test_print_when_no_args() {
     }
 
     let output_str = String::from_utf8(output).unwrap();
-    assert!(output_str.contains("FOO") && output_str.contains("bar"), "Output does not contain FOO and bar");
-    assert!(output_str.contains("BAZ") && output_str.contains("qux"), "Output does not contain BAZ and qux");
+    assert!(
+        output_str.contains("FOO") && output_str.contains("bar"),
+        "Output does not contain FOO and bar"
+    );
+    assert!(
+        output_str.contains("BAZ") && output_str.contains("qux"),
+        "Output does not contain BAZ and qux"
+    );
 }
