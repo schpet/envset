@@ -190,12 +190,27 @@ pub fn print_diff_to_writer<W: Write>(
 }
 
 pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
-    let (mut env_vars, original_lines) = read_env_file(file_path)?;
+    let (env_vars, original_lines) = read_env_file(file_path)?;
 
-    for key in keys {
-        env_vars.remove(key);
+    let updated_lines: Vec<String> = original_lines
+        .into_iter()
+        .filter(|line| {
+            if let Some((key, _)) = line.split_once('=') {
+                !keys.contains(&key.trim().to_string())
+            } else {
+                true
+            }
+        })
+        .collect();
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(file_path)?;
+
+    for line in updated_lines {
+        writeln!(file, "{}", line)?;
     }
 
-    write_env_file(file_path, &env_vars, &original_lines)?;
     Ok(())
 }

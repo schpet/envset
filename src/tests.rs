@@ -194,17 +194,14 @@ fn test_delete_env_vars() {
     let keys_to_delete = vec!["FOO".to_string(), "QUUX".to_string()];
     envset::delete_env_vars(file_path.to_str().unwrap(), &keys_to_delete).unwrap();
 
+    let final_content = fs::read_to_string(&file_path).unwrap();
+    assert_eq!(final_content, "BAZ=qux\n", "Final content should only contain BAZ=qux");
+
     let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert!(!result.contains_key("FOO"), "FOO should be deleted");
     assert!(result.contains_key("BAZ"), "BAZ should still exist");
     assert!(!result.contains_key("QUUX"), "QUUX should be deleted");
     assert_eq!(result.len(), 1, "Only one key should remain");
-
-    let final_content = fs::read_to_string(&file_path).unwrap();
-    assert_eq!(
-        final_content, "BAZ=qux\n",
-        "Final content should only contain BAZ=qux"
-    );
 }
 
 #[test]
