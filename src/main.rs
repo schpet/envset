@@ -49,6 +49,8 @@ enum Commands {
 fn main() {
     let cli = Cli::parse();
 
+    let should_print = cli.command.is_none() && cli.vars.is_empty();
+
     match &cli.command {
         Some(Commands::Get { key }) => match read_env_file(&cli.file) {
             Ok((env_vars, _)) => match env_vars.get(key) {
@@ -63,14 +65,8 @@ fn main() {
                 process::exit(1);
             }
         },
-        Some(Commands::Print) | None => {
-            if atty::is(Stream::Stdout) {
-                print_all_env_vars(&cli.file);
-            } else {
-                // If not outputting to a terminal, use a plain writer without colors
-                let mut writer = std::io::stdout();
-                envset::print_all_env_vars_to_writer(&cli.file, &mut writer);
-            }
+        Some(Commands::Print) => {
+            should_print = true;
         }
         Some(Commands::Keys) => {
             print_all_keys(&cli.file);
@@ -94,9 +90,10 @@ fn main() {
             let (updated_env, _) = read_env_file(&cli.file).unwrap();
             print_diff(&original_env, &updated_env);
         }
+        None => {}
     }
 
-    if cli.command.is_none() && !cli.vars.is_empty() {
+    if !cli.vars.is_empty() {
         let no_overwrite = cli.no_overwrite;
         let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
             Ok(result) => result,
@@ -130,5 +127,15 @@ fn main() {
         }
 
         print_diff(&original_env, &env_vars);
+    }
+
+    if should_print {
+        if atty::is(Stream::Stdout) {
+            print_all_env_vars(&cli.file);
+        } else {
+            // If not outputting to a terminal, use a plain writer without colors
+            let mut writer = std::io::stdout();
+            envset::print_all_env_vars_to_writer(&cli.file, &mut writer);
+        }
     }
 }
