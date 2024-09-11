@@ -5,7 +5,7 @@ use tempfile::tempdir;
 
 use envset::{
     parse_args, parse_env_content, parse_stdin_with_reader, print_all_env_vars_to_writer,
-    print_diff_to_writer, read_env_file, write_env_file,
+    print_all_keys_to_writer, print_diff_to_writer, read_env_file, write_env_file,
 };
 
 #[test]
