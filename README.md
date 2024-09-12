@@ -1,6 +1,6 @@
 # envset
 
-`envset` is a CLI for setting environment variables in .env files.
+`envset` is a CLI for setting environment variables in .env files. this is something you may have never considered needing a specialized tool for. and you don't. but just like updating a git config it's just more fun doing it with a command.
 
 ## installation
 
