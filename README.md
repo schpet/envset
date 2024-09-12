@@ -35,7 +35,7 @@ envset --no-overwrite KEY1=newvalue1
 
 ```bash
 # print all key value pairs 
-envset print
+envset
 
 # print a single value
 envset get KEY1
