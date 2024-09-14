@@ -61,19 +61,21 @@ pub fn write_env_file(
                 value,
                 trailing_comment,
             } => {
-                if let Some(new_value) = env_vars.get(key) {
-                    write!(file, "{}={}", key, quote_value(new_value))?;
-                    if let Some(comment) = trailing_comment {
-                        write!(file, " {}", comment)?;
+                if !key.is_empty() {
+                    if let Some(new_value) = env_vars.get(key) {
+                        write!(file, "{}={}", key, quote_value(new_value))?;
+                        if let Some(comment) = trailing_comment {
+                            write!(file, " {}", comment)?;
+                        }
+                        writeln!(file)?;
+                        written_keys.insert(key.to_string());
+                    } else {
+                        write!(file, "{}={}", key, quote_value(value))?;
+                        if let Some(comment) = trailing_comment {
+                            write!(file, " {}", comment)?;
+                        }
+                        writeln!(file)?;
                     }
-                    writeln!(file)?;
-                    written_keys.insert(key.to_string());
-                } else {
-                    write!(file, "{}={}", key, quote_value(value))?;
-                    if let Some(comment) = trailing_comment {
-                        write!(file, " {}", comment)?;
-                    }
-                    writeln!(file)?;
                 }
             }
             Node::Comment(comment) => writeln!(file, "{}", comment)?,
@@ -83,7 +85,7 @@ pub fn write_env_file(
 
     // Collect new variables
     for (key, value) in env_vars {
-        if !written_keys.contains(key.as_str()) {
+        if !written_keys.contains(key.as_str()) && !key.is_empty() {
             new_vars.push((key, value));
         }
     }
