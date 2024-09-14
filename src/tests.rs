@@ -154,6 +154,29 @@ fn test_parse_stdin_with_pipe() {
 }
 
 #[test]
+fn test_set_quoted_values_through_args() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+
+    let args = vec![
+        "KEY1=simple value".to_string(),
+        r#"KEY2="quoted value""#.to_string(),
+        r#"KEY3='single quoted'"#.to_string(),
+        r#"KEY4="nested \"quotes\" 'here'""#.to_string(),
+    ];
+    let result = parse_args(&args);
+
+    write_env_file(file_path.to_str().unwrap(), &result, &[]).unwrap();
+
+    let (env_vars, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+
+    assert_eq!(env_vars.get("KEY1"), Some(&"simple value".to_string()));
+    assert_eq!(env_vars.get("KEY2"), Some(&"quoted value".to_string()));
+    assert_eq!(env_vars.get("KEY3"), Some(&"single quoted".to_string()));
+    assert_eq!(env_vars.get("KEY4"), Some(&r#"nested "quotes" 'here'"#.to_string()));
+}
+
+#[test]
 fn test_parse_stdin_and_write_to_file() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
