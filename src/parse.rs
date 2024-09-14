@@ -13,7 +13,7 @@ pub enum Node {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Ast {
-    nodes: Vec<Node>,
+    pub nodes: Vec<Node>,
 }
 
 impl Ast {
@@ -23,6 +23,14 @@ impl Ast {
 
     pub fn add_node(&mut self, node: Node) {
         self.nodes.push(node);
+    }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, Node> {
+        self.nodes.iter()
+    }
+
+    pub fn first(&self) -> Option<&Node> {
+        self.nodes.first()
     }
 }
 
@@ -56,8 +64,6 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
     let mut in_strong_quote = false;
     let mut in_weak_quote = false;
     let mut escaped = false;
-    let mut export_prefix = false;
-
     while let Some(c) = chars.next() {
         if in_key {
             if c.is_ascii_alphanumeric() || c == '_' || c == '.' {
@@ -66,7 +72,6 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
                 in_key = false;
                 in_value = true;
             } else if c.is_whitespace() && key == "export" {
-                export_prefix = true;
                 key.clear();
             } else if !c.is_whitespace() {
                 // Invalid key character

@@ -17,13 +17,13 @@ pub fn read_env_file(
     if path.exists() {
         let contents = fs::read_to_string(path)?;
         let ast = parse(&contents);
-        for node in ast.nodes {
+        for node in ast.iter() {
             match node {
                 Node::KeyValue { key, value, .. } => {
-                    env_vars.insert(key, value);
+                    env_vars.insert(key.clone(), value.clone());
                 }
                 Node::Comment(comment) => {
-                    original_lines.push(comment);
+                    original_lines.push(comment.clone());
                 }
                 Node::EmptyLine => {
                     original_lines.push(String::new());
@@ -51,7 +51,7 @@ pub fn write_env_file(
     // First pass: write existing lines and update values
     for line in original_lines {
         let ast = parse(line);
-        match ast.nodes.first() {
+        match ast.first() {
             Some(Node::KeyValue { key, .. }) => {
                 if let Some(value) = env_vars.get(key) {
                     if !written_keys.contains(key.as_str()) {
@@ -90,7 +90,7 @@ pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
     vars.iter()
         .filter_map(|var| {
             let ast = parse(var);
-            if let Some(Node::KeyValue { key, value, .. }) = ast.nodes.first() {
+            if let Some(Node::KeyValue { key, value, .. }) = ast.first() {
                 Some((key.clone(), value.clone()))
             } else {
                 println!("Invalid argument: {}. Skipping.", var);
@@ -102,11 +102,10 @@ pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {
     let ast = parse(content);
-    ast.nodes
-        .into_iter()
+    ast.iter()
         .filter_map(|node| {
             if let Node::KeyValue { key, value, .. } = node {
-                Some((key, value))
+                Some((key.clone(), value.clone()))
             } else {
                 None
             }
