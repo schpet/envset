@@ -211,6 +211,17 @@ fn test_parse_stdin_and_write_to_file() {
 }
 
 #[test]
+fn test_parse_args_preserves_single_quotes() {
+    let args = vec![
+        "FOO=bing 'baz'".to_string(),
+        "BING=bar".to_string(),
+    ];
+    let result = parse_args(&args);
+    assert_eq!(result.get("FOO"), Some(&"bing 'baz'".to_string()));
+    assert_eq!(result.get("BING"), Some(&"bar".to_string()));
+}
+
+#[test]
 fn test_print_diff_multiple_vars() {
     let mut original = HashMap::new();
     original.insert("KEY1".to_string(), "old_value1".to_string());
