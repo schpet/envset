@@ -119,7 +119,8 @@ pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
         .filter_map(|var| {
             let parts: Vec<&str> = var.splitn(2, '=').collect();
             if parts.len() == 2 {
-                Some((parts[0].to_string(), parts[1].to_string()))
+                let value = parts[1].trim_matches(|c| c == '\'' || c == '"');
+                Some((parts[0].to_string(), value.to_string()))
             } else {
                 println!("Invalid argument: {}. Skipping.", var);
                 None
