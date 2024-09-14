@@ -62,14 +62,14 @@ pub fn write_env_file(
                 trailing_comment,
             } => {
                 if let Some(new_value) = env_vars.get(key) {
-                    write!(file, "{}={}", key, new_value)?;
+                    write!(file, "{}={}", key, quote_value(new_value))?;
                     if let Some(comment) = trailing_comment {
                         write!(file, " {}", comment)?;
                     }
                     writeln!(file)?;
                     written_keys.insert(key.to_string());
                 } else {
-                    write!(file, "{}={}", key, value)?;
+                    write!(file, "{}={}", key, quote_value(value))?;
                     if let Some(comment) = trailing_comment {
                         write!(file, " {}", comment)?;
                     }
@@ -93,7 +93,7 @@ pub fn write_env_file(
 
     // Second pass: write new variables
     for (key, value) in new_vars {
-        writeln!(file, "{}={}", key, value)?;
+        writeln!(file, "{}={}", key, quote_value(value))?;
     }
 
     Ok(())
@@ -212,4 +212,26 @@ pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> 
         .collect();
 
     write_env_file(file_path, &updated_env_vars, &original_lines)
+}
+
+fn needs_quoting(value: &str) -> bool {
+    value.contains(char::is_whitespace)
+        || value.contains('\'')
+        || value.contains('"')
+        || value.contains('\\')
+        || value.contains('$')
+        || value.contains('#')
+        || value.is_empty()
+}
+
+fn quote_value(value: &str) -> String {
+    if needs_quoting(value) {
+        if !value.contains('"') {
+            format!("\"{}\"", value)
+        } else {
+            format!("'{}'", value.replace('\'', "\\'"))
+        }
+    } else {
+        value.to_string()
+    }
 }
