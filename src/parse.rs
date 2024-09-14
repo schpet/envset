@@ -108,7 +108,7 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
                     '\'' => {
                         in_strong_quote = true;
                         value.push(c);
-                    },
+                    }
                     '"' => in_weak_quote = true,
                     '\\' => escaped = true,
                     '#' => {
