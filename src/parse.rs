@@ -99,7 +99,7 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
                     '"' => in_weak_quote = true,
                     '\\' => escaped = true,
                     '#' => {
-                        comment = Some(chars.collect::<String>().trim().to_string());
+                        comment = Some(format!("#{}", chars.collect::<String>()));
                         break;
                     }
                     ' ' | '\t' if value.is_empty() => continue, // Skip leading whitespace
@@ -107,9 +107,10 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
                         // Check if there's a comment after whitespace
                         if let Some('#') = chars.peek() {
                             chars.next(); // consume '#'
-                            comment = Some(chars.collect::<String>().trim().to_string());
+                            comment = Some(format!("#{}", chars.collect::<String>()));
                             break;
                         }
+                        value.push(c);
                     }
                     _ => value.push(c),
                 }
