@@ -20,6 +20,33 @@ fn test_parse_stdin() {
 }
 
 #[test]
+fn test_write_vars_with_quotes() {
+    let dir = tempdir().unwrap();
+    let file_path = dir.path().join(".env");
+    
+    let mut env_vars = HashMap::new();
+    env_vars.insert("KEY1".to_string(), r#"value with "quotes""#.to_string());
+    env_vars.insert("KEY2".to_string(), r#"value with 'quotes'"#.to_string());
+    env_vars.insert("KEY3".to_string(), r#"value with both 'single' and "double" quotes"#.to_string());
+
+    write_env_file(file_path.to_str().unwrap(), &env_vars, &[]).unwrap();
+
+    // Read the file contents
+    let contents = fs::read_to_string(&file_path).unwrap();
+
+    // Check if the variables are correctly written
+    assert!(contents.contains(r#"KEY1="value with \"quotes\"""#));
+    assert!(contents.contains(r#"KEY2='value with '\''quotes'\''"#));
+    assert!(contents.contains(r#"KEY3="value with both 'single' and \"double\" quotes""#));
+
+    // Read the file using read_env_file and check the result
+    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    assert_eq!(result.get("KEY1"), Some(&r#"value with "quotes""#.to_string()));
+    assert_eq!(result.get("KEY2"), Some(&r#"value with 'quotes'"#.to_string()));
+    assert_eq!(result.get("KEY3"), Some(&r#"value with both 'single' and "double" quotes"#.to_string()));
+}
+
+#[test]
 fn test_parse_args() {
     let args = vec![
         "KEY1=value1".to_string(),
