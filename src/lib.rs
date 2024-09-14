@@ -1,11 +1,11 @@
 pub mod parse;
 
+use crate::parse::{parse, Node};
 use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
-use crate::parse::{parse, Node};
 
 pub fn read_env_file(
     file_path: &str,
