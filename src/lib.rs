@@ -56,7 +56,11 @@ pub fn write_env_file(
     // First pass: write existing nodes and update values
     for node in ast.iter() {
         match node {
-            Node::KeyValue { key, value, trailing_comment } => {
+            Node::KeyValue {
+                key,
+                value,
+                trailing_comment,
+            } => {
                 if let Some(new_value) = env_vars.get(key) {
                     write!(file, "{}={}", key, new_value)?;
                     if let Some(comment) = trailing_comment {
