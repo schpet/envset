@@ -318,7 +318,7 @@ KEY7="line 1\nline 2"
             },
             Node::KeyValue {
                 key: "KEY4".to_string(),
-                value: r"sweet $\fgs'fds".to_string(),
+                value: "sweet $\\fgs'fds".to_string(),
                 trailing_comment: None,
             },
             Node::KeyValue {
