@@ -184,4 +184,146 @@ KEY6="value6"
             ]
         );
     }
+
+    #[test]
+    fn test_parse_line_env() {
+        let input = r#"
+KEY=1
+KEY2="2"
+KEY3='3'
+KEY4='fo ur'
+KEY5="fi ve"
+KEY6=s\ ix
+KEY7=
+KEY8=     
+KEY9=   # foo
+KEY10  ="whitespace before ="
+KEY11=    "whitespace after ="
+export="export as key"
+export   SHELL_LOVER=1
+"#;
+        let ast = parse(input);
+        let expected = vec![
+            Node::EmptyLine,
+            Node::KeyValue {
+                key: "KEY".to_string(),
+                value: "1".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY2".to_string(),
+                value: "2".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY3".to_string(),
+                value: "3".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY4".to_string(),
+                value: "fo ur".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY5".to_string(),
+                value: "fi ve".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY6".to_string(),
+                value: "s ix".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY7".to_string(),
+                value: "".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY8".to_string(),
+                value: "".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY9".to_string(),
+                value: "".to_string(),
+                trailing_comment: Some("# foo".to_string()),
+            },
+            Node::KeyValue {
+                key: "KEY10".to_string(),
+                value: "whitespace before =".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY11".to_string(),
+                value: "whitespace after =".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "export".to_string(),
+                value: "export as key".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "SHELL_LOVER".to_string(),
+                value: "1".to_string(),
+                trailing_comment: None,
+            },
+        ];
+        assert_eq!(ast.nodes, expected);
+    }
+
+    #[test]
+    fn test_parse_value_escapes() {
+        let input = r#"
+KEY=my\ cool\ value
+KEY2=\$sweet
+KEY3="awesome stuff \"mang\""
+KEY4='sweet $\fgs'\''fds'
+KEY5="'\"yay\\"\ "stuff"
+KEY6="lol" #well you see when I say lol wh
+KEY7="line 1\nline 2"
+"#;
+        let ast = parse(input);
+        let expected = vec![
+            Node::EmptyLine,
+            Node::KeyValue {
+                key: "KEY".to_string(),
+                value: "my cool value".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY2".to_string(),
+                value: "$sweet".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY3".to_string(),
+                value: r#"awesome stuff "mang""#.to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY4".to_string(),
+                value: r"sweet $\fgs'fds".to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY5".to_string(),
+                value: r#"'"yay\ stuff"#.to_string(),
+                trailing_comment: None,
+            },
+            Node::KeyValue {
+                key: "KEY6".to_string(),
+                value: "lol".to_string(),
+                trailing_comment: Some("#well you see when I say lol wh".to_string()),
+            },
+            Node::KeyValue {
+                key: "KEY7".to_string(),
+                value: "line 1\nline 2".to_string(),
+                trailing_comment: None,
+            },
+        ];
+        assert_eq!(ast.nodes, expected);
+    }
 }
