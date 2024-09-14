@@ -236,7 +236,7 @@ fn quote_value(value: &str) -> String {
                 value
                     .replace('\\', "\\\\")
                     .replace('\"', "\\\"")
-                    .replace('\'', "\\\'")
+                    .replace('\'', "'\"'\"'")
             )
         }
     } else {
