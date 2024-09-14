@@ -131,7 +131,10 @@ pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
 
 fn remove_surrounding_quotes(s: &str) -> String {
     let chars: Vec<char> = s.chars().collect();
-    if chars.len() >= 2 && ((chars[0] == '\'' && chars[chars.len() - 1] == '\'') || (chars[0] == '"' && chars[chars.len() - 1] == '"')) {
+    if chars.len() >= 2
+        && ((chars[0] == '\'' && chars[chars.len() - 1] == '\'')
+            || (chars[0] == '"' && chars[chars.len() - 1] == '"'))
+    {
         chars[1..chars.len() - 1].iter().collect()
     } else {
         s.to_string()
