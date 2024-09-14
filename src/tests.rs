@@ -212,10 +212,11 @@ fn test_parse_stdin_and_write_to_file() {
 
 #[test]
 fn test_parse_args_preserves_single_quotes() {
-    let args = vec!["FOO=bing 'baz'".to_string(), "BING=bar".to_string()];
+    let args = vec!["FOO=bing 'baz'".to_string(), "BING=bar".to_string(), "KEY='val'".to_string()];
     let result = parse_args(&args);
     assert_eq!(result.get("FOO"), Some(&"bing 'baz'".to_string()));
     assert_eq!(result.get("BING"), Some(&"bar".to_string()));
+    assert_eq!(result.get("KEY"), Some(&"val".to_string()));
 }
 
 #[test]
