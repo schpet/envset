@@ -56,6 +56,7 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
     let mut in_strong_quote = false;
     let mut in_weak_quote = false;
     let mut escaped = false;
+    let mut export_prefix = false;
 
     while let Some(c) = chars.next() {
         if in_key {
@@ -64,6 +65,9 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
             } else if c == '=' {
                 in_key = false;
                 in_value = true;
+            } else if c.is_whitespace() && key == "export" {
+                export_prefix = true;
+                key.clear();
             } else if !c.is_whitespace() {
                 // Invalid key character
                 return (String::new(), String::new(), None);
