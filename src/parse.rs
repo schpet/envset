@@ -47,52 +47,82 @@ pub fn parse(input: &str) -> Ast {
 }
 
 fn parse_key_value(line: &str) -> (String, String, Option<String>) {
-    let mut parts = line.splitn(2, '=');
-    let key = parts.next().unwrap().trim().to_string();
-    let value_and_comment = parts.next().unwrap_or("").trim_start();
-
-    let (value, comment) = split_value_and_comment(value_and_comment);
-
-    (key, value, comment)
-}
-
-fn split_value_and_comment(s: &str) -> (String, Option<String>) {
-    let mut in_quotes = false;
-    let mut escape = false;
+    let mut key = String::new();
     let mut value = String::new();
-    let mut comment = String::new();
-    let mut comment_start = None;
+    let mut comment = None;
+    let mut chars = line.chars().peekable();
+    let mut in_key = true;
+    let mut in_value = false;
+    let mut in_strong_quote = false;
+    let mut in_weak_quote = false;
+    let mut escaped = false;
 
-    for (i, c) in s.char_indices() {
-        match c {
-            '#' if !in_quotes && !escape && comment_start.is_none() => {
-                comment_start = Some(i);
+    while let Some(c) = chars.next() {
+        if in_key {
+            if c.is_ascii_alphanumeric() || c == '_' || c == '.' {
+                key.push(c);
+            } else if c == '=' {
+                in_key = false;
+                in_value = true;
+            } else if !c.is_whitespace() {
+                // Invalid key character
+                return (String::new(), String::new(), None);
             }
-            '"' if !escape => in_quotes = !in_quotes,
-            '\\' if !escape => escape = true,
-            _ => {
-                if escape {
-                    escape = false;
+        } else if in_value {
+            if escaped {
+                match c {
+                    '\\' | '\'' | '"' | '$' | ' ' => value.push(c),
+                    'n' => value.push('\n'),
+                    _ => {
+                        // Invalid escape sequence
+                        return (String::new(), String::new(), None);
+                    }
                 }
-                if comment_start.is_none() {
+                escaped = false;
+            } else if in_strong_quote {
+                if c == '\'' {
+                    in_strong_quote = false;
+                } else {
                     value.push(c);
+                }
+            } else if in_weak_quote {
+                if c == '"' {
+                    in_weak_quote = false;
+                } else if c == '\\' {
+                    escaped = true;
+                } else {
+                    value.push(c);
+                }
+            } else {
+                match c {
+                    '\'' => in_strong_quote = true,
+                    '"' => in_weak_quote = true,
+                    '\\' => escaped = true,
+                    '#' => {
+                        comment = Some(chars.collect::<String>().trim().to_string());
+                        break;
+                    }
+                    ' ' | '\t' if value.is_empty() => continue, // Skip leading whitespace
+                    ' ' | '\t' => {
+                        // Check if there's a comment after whitespace
+                        if let Some('#') = chars.peek() {
+                            chars.next(); // consume '#'
+                            comment = Some(chars.collect::<String>().trim().to_string());
+                            break;
+                        }
+                    }
+                    _ => value.push(c),
                 }
             }
         }
     }
 
-    if let Some(start) = comment_start {
-        comment = s[start..].to_string();
+    if in_strong_quote || in_weak_quote || escaped {
+        // Unclosed quotes or trailing backslash
+        return (String::new(), String::new(), None);
     }
 
-    let value = value.trim().to_string();
-    let comment = if comment.is_empty() {
-        None
-    } else {
-        Some(comment.trim().to_string())
-    };
-
-    (value, comment)
+    (key.trim().to_string(), value.trim().to_string(), comment)
 }
 
 #[cfg(test)]
