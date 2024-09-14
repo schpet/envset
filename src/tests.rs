@@ -51,6 +51,12 @@ fn test_write_vars_with_quotes() {
         println!("{}: {}", key, value);
     }
 
+    // Print out the environment variables for debugging
+    println!("Environment variables:");
+    for (key, value) in &result {
+        println!("{}: {}", key, value);
+    }
+
     assert_eq!(
         result.get("KEY1"),
         Some(&r#"value with "quotes""#.to_string())
