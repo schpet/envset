@@ -44,7 +44,7 @@ fn test_write_vars_with_quotes() {
 
     // Read the file using read_env_file and check the result
     let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
-    
+
     // Print out the environment variables for debugging
     println!("Environment variables:");
     for (key, value) in &result {
