@@ -59,18 +59,40 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
 fn split_value_and_comment(s: &str) -> (String, Option<String>) {
     let mut in_quotes = false;
     let mut escape = false;
+    let mut value = String::new();
+    let mut comment = String::new();
+    let mut in_comment = false;
+
     for (i, c) in s.char_indices() {
-        if !in_quotes && c == '#' && !escape {
-            return (s[..i].trim().to_string(), Some(s[i..].trim().to_string()));
+        if !in_quotes && c == '#' && !escape && !in_comment {
+            in_comment = true;
+            continue;
         }
-        match c {
-            '"' if !escape => in_quotes = !in_quotes,
-            '\\' if !escape => escape = true,
-            _ if escape => escape = false,
-            _ => {}
+
+        if in_comment {
+            comment.push(c);
+        } else {
+            match c {
+                '"' if !escape => in_quotes = !in_quotes,
+                '\\' if !escape => escape = true,
+                _ => {
+                    if escape {
+                        escape = false;
+                    }
+                    value.push(c);
+                }
+            }
         }
     }
-    (s.to_string(), None)
+
+    let value = value.trim().to_string();
+    let comment = if comment.is_empty() {
+        None
+    } else {
+        Some(format!("#{}", comment.trim()))
+    };
+
+    (value, comment)
 }
 
 #[cfg(test)]
