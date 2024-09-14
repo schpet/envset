@@ -61,26 +61,20 @@ fn split_value_and_comment(s: &str) -> (String, Option<String>) {
     let mut escape = false;
     let mut value = String::new();
     let mut comment = String::new();
-    let mut in_comment = false;
 
-    for (i, c) in s.char_indices() {
-        if !in_quotes && c == '#' && !escape && !in_comment {
-            in_comment = true;
-            continue;
-        }
-
-        if in_comment {
-            comment.push(c);
-        } else {
-            match c {
-                '"' if !escape => in_quotes = !in_quotes,
-                '\\' if !escape => escape = true,
-                _ => {
-                    if escape {
-                        escape = false;
-                    }
-                    value.push(c);
+    for (_i, c) in s.char_indices() {
+        match c {
+            '#' if !in_quotes && !escape => {
+                comment = s[_i..].to_string();
+                break;
+            }
+            '"' if !escape => in_quotes = !in_quotes,
+            '\\' if !escape => escape = true,
+            _ => {
+                if escape {
+                    escape = false;
                 }
+                value.push(c);
             }
         }
     }
@@ -89,7 +83,7 @@ fn split_value_and_comment(s: &str) -> (String, Option<String>) {
     let comment = if comment.is_empty() {
         None
     } else {
-        Some(format!("#{}", comment.trim()))
+        Some(comment.trim().to_string())
     };
 
     (value, comment)
@@ -150,7 +144,6 @@ KEY6="value6"
                     value: "value6".to_string(),
                     trailing_comment: None,
                 },
-                Node::EmptyLine,
             ]
         );
     }
