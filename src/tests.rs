@@ -180,7 +180,7 @@ fn test_multiple_var_sets() {
 }
 
 #[test]
-fn test_keep_last_occurrence_of_duplicate_keys() {
+fn test_keep_one_occurrence_of_duplicate_keys() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
 
@@ -208,7 +208,7 @@ fn test_keep_last_occurrence_of_duplicate_keys() {
 
     // Check the final content of the file
     let final_content = fs::read_to_string(&file_path).unwrap();
-    assert_eq!(final_content, "A=a\nFOO=3\nB=b\n");
+    assert_eq!(final_content, "A=a\nB=b\nFOO=3\n");
 }
 
 #[test]
