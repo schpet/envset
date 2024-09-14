@@ -117,9 +117,9 @@ pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
 
     vars.iter()
         .filter_map(|var| {
-            let ast = parse(var);
-            if let Some(Node::KeyValue { key, value, .. }) = ast.first() {
-                Some((key.clone(), value.clone()))
+            let parts: Vec<&str> = var.splitn(2, '=').collect();
+            if parts.len() == 2 {
+                Some((parts[0].to_string(), parts[1].to_string()))
             } else {
                 println!("Invalid argument: {}. Skipping.", var);
                 None
