@@ -231,7 +231,13 @@ fn quote_value(value: &str) -> String {
         } else if !value.contains('\'') {
             format!("'{}'", value.replace('\\', "\\\\"))
         } else {
-            format!("\"{}\"", value.replace('\\', "\\\\").replace('\"', "\\\"").replace('\'', "'\"'\"'"))
+            format!(
+                "\"{}\"",
+                value
+                    .replace('\\', "\\\\")
+                    .replace('\"', "\\\"")
+                    .replace('\'', "'\"'\"'")
+            )
         }
     } else {
         value.to_string()

@@ -78,7 +78,8 @@ fn test_write_vars_with_quotes() {
     println!("File contents after writing:\n{}", file_contents);
     assert!(file_contents.contains(r#"KEY1='value with "quotes"'"#));
     assert!(file_contents.contains(r#"KEY2="value with 'quotes'""#));
-    assert!(file_contents.contains(r#"KEY3="value with both '\"'\"'single'\"'\"' and \"double\" quotes""#));
+    assert!(file_contents
+        .contains(r#"KEY3="value with both '\"'\"'single'\"'\"' and \"double\" quotes""#));
 }
 
 #[test]
