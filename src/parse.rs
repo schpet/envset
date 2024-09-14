@@ -61,10 +61,7 @@ fn split_value_and_comment(s: &str) -> (String, Option<String>) {
     let mut escape = false;
     for (i, c) in s.char_indices() {
         if !in_quotes && c == '#' && !escape {
-            return (
-                s[..i].trim().to_string(),
-                Some(s[i..].trim().to_string()),
-            );
+            return (s[..i].trim().to_string(), Some(s[i..].trim().to_string()));
         }
         match c {
             '"' if !escape => in_quotes = !in_quotes,
