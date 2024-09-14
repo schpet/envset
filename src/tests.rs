@@ -72,6 +72,12 @@ fn test_write_vars_with_quotes() {
         result.get("KEY3"),
         Some(&r#"value with both 'single' and "double" quotes"#.to_string())
     );
+
+    // Check the file contents directly
+    let file_contents = fs::read_to_string(&file_path).unwrap();
+    assert!(file_contents.contains(r#"KEY1="value with \"quotes\"""#));
+    assert!(file_contents.contains(r#"KEY2='value with '\''quotes''"#));
+    assert!(file_contents.contains(r#"KEY3="value with both 'single' and \"double\" quotes""#));
 }
 
 #[test]
