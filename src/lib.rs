@@ -47,6 +47,7 @@ pub fn write_env_file(
         .open(file_path)?;
 
     let mut written_keys = HashSet::new();
+    let mut new_vars = Vec::new();
 
     // First pass: write existing lines and update values
     for line in original_lines {
@@ -64,11 +65,19 @@ pub fn write_env_file(
         }
     }
 
-    // Second pass: write new variables
+    // Collect new variables
     for (key, value) in env_vars {
         if !written_keys.contains(key.as_str()) {
-            writeln!(file, "{}={}", key, value)?;
+            new_vars.push((key, value));
         }
+    }
+
+    // Sort new variables to ensure consistent order
+    new_vars.sort_by(|a, b| a.0.cmp(b.0));
+
+    // Second pass: write new variables
+    for (key, value) in new_vars {
+        writeln!(file, "{}={}", key, value)?;
     }
 
     Ok(())

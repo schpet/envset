@@ -176,7 +176,7 @@ fn test_multiple_var_sets() {
 
     // Check the final content of the file
     let final_content = fs::read_to_string(&file_path).unwrap();
-    assert_eq!(final_content, "ABCD=123\nAB=12\n");
+    assert_eq!(final_content, "AB=12\nABCD=123\n");
 }
 
 #[test]
