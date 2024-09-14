@@ -49,19 +49,31 @@ pub fn write_env_file(
     let mut written_keys = HashSet::new();
     let mut new_vars = Vec::new();
 
-    // First pass: write existing lines and update values
-    for line in original_lines {
-        let ast = parse(line);
-        match ast.first() {
-            Some(Node::KeyValue { key, .. }) => {
-                if let Some(value) = env_vars.get(key) {
-                    writeln!(file, "{}={}", key, value)?;
+    // Parse the original content
+    let original_content = original_lines.join("\n");
+    let ast = parse(&original_content);
+
+    // First pass: write existing nodes and update values
+    for node in ast.iter() {
+        match node {
+            Node::KeyValue { key, value, trailing_comment } => {
+                if let Some(new_value) = env_vars.get(key) {
+                    write!(file, "{}={}", key, new_value)?;
+                    if let Some(comment) = trailing_comment {
+                        write!(file, " {}", comment)?;
+                    }
+                    writeln!(file)?;
                     written_keys.insert(key.to_string());
                 } else {
-                    writeln!(file, "{}", line)?;
+                    write!(file, "{}={}", key, value)?;
+                    if let Some(comment) = trailing_comment {
+                        write!(file, " {}", comment)?;
+                    }
+                    writeln!(file)?;
                 }
             }
-            _ => writeln!(file, "{}", line)?,
+            Node::Comment(comment) => writeln!(file, "{}", comment)?,
+            Node::EmptyLine => writeln!(file)?,
         }
     }
 
