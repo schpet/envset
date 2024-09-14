@@ -7,6 +7,7 @@ use envset::{
     parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_file,
     write_env_file,
 };
+use envset::parse::{parse, Ast};
 
 #[cfg(test)]
 mod tests;
@@ -44,6 +45,8 @@ enum Commands {
         #[arg(required = true)]
         keys: Vec<String>,
     },
+    /// Print the AST as JSON
+    Ast,
 }
 
 fn main() {
@@ -89,6 +92,24 @@ fn main() {
 
             let (updated_env, _) = read_env_file(&cli.file).unwrap();
             print_diff(&original_env, &updated_env);
+        }
+        Some(Commands::Ast) => {
+            match std::fs::read_to_string(&cli.file) {
+                Ok(content) => {
+                    let ast: Ast = parse(&content);
+                    match serde_json::to_string_pretty(&ast) {
+                        Ok(json) => println!("{}", json),
+                        Err(e) => {
+                            eprintln!("Error serializing AST to JSON: {}", e);
+                            process::exit(1);
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error reading .env file: {}", e);
+                    process::exit(1);
+                }
+            }
         }
         None => {}
     }

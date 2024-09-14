@@ -1,6 +1,7 @@
+use serde::Serialize;
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub enum Node {
     KeyValue {
         key: String,
@@ -11,7 +12,7 @@ pub enum Node {
     EmptyLine,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub struct Ast {
     nodes: Vec<Node>,
 }
