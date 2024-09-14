@@ -54,10 +54,8 @@ pub fn write_env_file(
         match ast.first() {
             Some(Node::KeyValue { key, .. }) => {
                 if let Some(value) = env_vars.get(key) {
-                    if !written_keys.contains(key.as_str()) {
-                        writeln!(file, "{}={}", key, value)?;
-                        written_keys.insert(key.to_string());
-                    }
+                    writeln!(file, "{}={}", key, value)?;
+                    written_keys.insert(key.to_string());
                 } else {
                     writeln!(file, "{}", line)?;
                 }
@@ -181,27 +179,12 @@ pub fn print_diff_to_writer<W: Write>(
 }
 
 pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
-    let (_env_vars, original_lines) = read_env_file(file_path)?;
+    let (env_vars, original_lines) = read_env_file(file_path)?;
 
-    let updated_lines: Vec<String> = original_lines
+    let updated_env_vars: HashMap<String, String> = env_vars
         .into_iter()
-        .filter(|line| {
-            if let Some((key, _)) = line.split_once('=') {
-                !keys.contains(&key.trim().to_string())
-            } else {
-                true
-            }
-        })
+        .filter(|(key, _)| !keys.contains(key))
         .collect();
 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(file_path)?;
-
-    for line in updated_lines {
-        writeln!(file, "{}", line)?;
-    }
-
-    Ok(())
+    write_env_file(file_path, &updated_env_vars, &original_lines)
 }
