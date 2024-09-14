@@ -91,7 +91,6 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
             } else if in_strong_quote {
                 if c == '\'' {
                     in_strong_quote = false;
-                    value.push(c);
                 } else {
                     value.push(c);
                 }
@@ -105,10 +104,7 @@ fn parse_key_value(line: &str) -> (String, String, Option<String>) {
                 }
             } else {
                 match c {
-                    '\'' => {
-                        in_strong_quote = true;
-                        value.push(c);
-                    }
+                    '\'' => in_strong_quote = true,
                     '"' => in_weak_quote = true,
                     '\\' => escaped = true,
                     '#' => {
