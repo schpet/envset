@@ -5,6 +5,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
+use crate::parse::{parse, Node};
 
 pub fn read_env_file(
     file_path: &str,
@@ -15,14 +16,17 @@ pub fn read_env_file(
 
     if path.exists() {
         let contents = fs::read_to_string(path)?;
-        for line in contents.lines() {
-            original_lines.push(line.to_string());
-            if let Some((key, value)) = line.split_once('=') {
-                if !line.trim_start().starts_with('#') {
-                    env_vars.insert(
-                        key.trim().to_string(),
-                        value.trim().trim_matches('"').trim_matches('\'').to_owned(),
-                    );
+        let ast = parse(&contents);
+        for node in ast.nodes {
+            match node {
+                Node::KeyValue { key, value, .. } => {
+                    env_vars.insert(key, value);
+                }
+                Node::Comment(comment) => {
+                    original_lines.push(comment);
+                }
+                Node::EmptyLine => {
+                    original_lines.push(String::new());
                 }
             }
         }
@@ -46,18 +50,19 @@ pub fn write_env_file(
 
     // First pass: write existing lines and update values
     for line in original_lines {
-        if let Some((key, _)) = line.split_once('=') {
-            let trimmed_key = key.trim();
-            if let Some(value) = env_vars.get(trimmed_key) {
-                if !written_keys.contains(trimmed_key) {
-                    writeln!(file, "{}={}", trimmed_key, value)?;
-                    written_keys.insert(trimmed_key.to_string());
+        let ast = parse(line);
+        match ast.nodes.first() {
+            Some(Node::KeyValue { key, .. }) => {
+                if let Some(value) = env_vars.get(key) {
+                    if !written_keys.contains(key.as_str()) {
+                        writeln!(file, "{}={}", key, value)?;
+                        written_keys.insert(key.to_string());
+                    }
+                } else {
+                    writeln!(file, "{}", line)?;
                 }
-            } else {
-                writeln!(file, "{}", line)?;
             }
-        } else {
-            writeln!(file, "{}", line)?;
+            _ => writeln!(file, "{}", line)?,
         }
     }
 
@@ -84,45 +89,26 @@ pub fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, Strin
 pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
     vars.iter()
         .filter_map(|var| {
-            let mut parts = var.splitn(2, '=');
-            match (parts.next(), parts.next()) {
-                (Some(key), Some(value)) => Some((
-                    key.trim().to_string(),
-                    value
-                        .trim()
-                        .trim_matches('\'')
-                        .trim_matches('"')
-                        .to_string(),
-                )),
-                _ => {
-                    println!("Invalid argument: {}. Skipping.", var);
-                    None
-                }
+            let ast = parse(var);
+            if let Some(Node::KeyValue { key, value, .. }) = ast.nodes.first() {
+                Some((key.clone(), value.clone()))
+            } else {
+                println!("Invalid argument: {}. Skipping.", var);
+                None
             }
         })
         .collect()
 }
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {
-    content
-        .lines()
-        .filter_map(|line| {
-            let line = line.trim();
-            if line.is_empty() || line.starts_with('#') {
-                None
+    let ast = parse(content);
+    ast.nodes
+        .into_iter()
+        .filter_map(|node| {
+            if let Node::KeyValue { key, value, .. } = node {
+                Some((key, value))
             } else {
-                let mut parts = line.splitn(2, '=');
-                match (parts.next(), parts.next()) {
-                    (Some(key), Some(value)) => Some((
-                        key.trim().to_string(),
-                        value
-                            .trim()
-                            .trim_matches('\'')
-                            .trim_matches('"')
-                            .to_string(),
-                    )),
-                    _ => None,
-                }
+                None
             }
         })
         .collect()
