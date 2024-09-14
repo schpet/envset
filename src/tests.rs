@@ -40,11 +40,6 @@ fn test_write_vars_with_quotes() {
     // Print out the file contents for debugging
     println!("File contents:\n{}", contents);
 
-    // Check if the variables are correctly written
-    // assert!(contents.contains(r#"KEY1="value with \"quotes\"""#));
-    // assert!(contents.contains(r#"KEY2='value with '\''quotes'\''"#));
-    // assert!(contents.contains(r#"KEY3="value with both 'single' and \"double\" quotes""#));
-
     // Read the file using read_env_file and check the result
     let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
 
