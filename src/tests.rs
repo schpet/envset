@@ -75,6 +75,7 @@ fn test_write_vars_with_quotes() {
 
     // Check the file contents directly
     let file_contents = fs::read_to_string(&file_path).unwrap();
+    println!("File contents after writing:\n{}", file_contents);
     assert!(file_contents.contains(r#"KEY1="value with \"quotes\"""#));
     assert!(file_contents.contains(r#"KEY2='value with \'quotes\''"#));
     assert!(file_contents.contains(r#"KEY3="value with both 'single' and \"double\" quotes""#));
