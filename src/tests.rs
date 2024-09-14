@@ -163,6 +163,7 @@ fn test_set_quoted_values_through_args() {
         r#"KEY2="quoted value""#.to_string(),
         r#"KEY3='single quoted'"#.to_string(),
         r#"KEY4="nested \"quotes\" 'here'""#.to_string(),
+        r#"FOO="bing \"baz\" 'bar'""#.to_string(),
     ];
     let result = parse_args(&args);
 
@@ -174,6 +175,7 @@ fn test_set_quoted_values_through_args() {
     assert_eq!(env_vars.get("KEY2"), Some(&"quoted value".to_string()));
     assert_eq!(env_vars.get("KEY3"), Some(&"single quoted".to_string()));
     assert_eq!(env_vars.get("KEY4"), Some(&r#"nested "quotes" 'here'"#.to_string()));
+    assert_eq!(env_vars.get("FOO"), Some(&r#"bing "baz" 'bar'"#.to_string()));
 }
 
 #[test]
