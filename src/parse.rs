@@ -61,12 +61,12 @@ fn split_value_and_comment(s: &str) -> (String, Option<String>) {
     let mut escape = false;
     let mut value = String::new();
     let mut comment = String::new();
+    let mut comment_start = None;
 
-    for (_i, c) in s.char_indices() {
+    for (i, c) in s.char_indices() {
         match c {
-            '#' if !in_quotes && !escape => {
-                comment = s[_i..].to_string();
-                break;
+            '#' if !in_quotes && !escape && comment_start.is_none() => {
+                comment_start = Some(i);
             }
             '"' if !escape => in_quotes = !in_quotes,
             '\\' if !escape => escape = true,
@@ -74,9 +74,15 @@ fn split_value_and_comment(s: &str) -> (String, Option<String>) {
                 if escape {
                     escape = false;
                 }
-                value.push(c);
+                if comment_start.is_none() {
+                    value.push(c);
+                }
             }
         }
+    }
+
+    if let Some(start) = comment_start {
+        comment = s[start..].to_string();
     }
 
     let value = value.trim().to_string();
@@ -124,8 +130,8 @@ KEY6="value6"
                 },
                 Node::KeyValue {
                     key: "KEY3".to_string(),
-                    value: "value3#not a comment".to_string(),
-                    trailing_comment: None,
+                    value: "value3".to_string(),
+                    trailing_comment: Some("#not a comment".to_string()),
                 },
                 Node::KeyValue {
                     key: "KEY4".to_string(),
