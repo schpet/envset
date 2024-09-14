@@ -119,14 +119,23 @@ pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
         .filter_map(|var| {
             let parts: Vec<&str> = var.splitn(2, '=').collect();
             if parts.len() == 2 {
-                let value = parts[1].trim_matches(|c| c == '\'' || c == '"');
-                Some((parts[0].to_string(), value.to_string()))
+                let value = remove_surrounding_quotes(parts[1]);
+                Some((parts[0].to_string(), value))
             } else {
                 println!("Invalid argument: {}. Skipping.", var);
                 None
             }
         })
         .collect()
+}
+
+fn remove_surrounding_quotes(s: &str) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    if chars.len() >= 2 && ((chars[0] == '\'' && chars[chars.len() - 1] == '\'') || (chars[0] == '"' && chars[chars.len() - 1] == '"')) {
+        chars[1..chars.len() - 1].iter().collect()
+    } else {
+        s.to_string()
+    }
 }
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {
