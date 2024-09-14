@@ -37,6 +37,9 @@ fn test_write_vars_with_quotes() {
     // Read the file contents
     let contents = fs::read_to_string(&file_path).unwrap();
 
+    // Print out the file contents for debugging
+    println!("File contents:\n{}", contents);
+
     // Check if the variables are correctly written
     assert!(contents.contains(r#"KEY1="value with \"quotes\"""#));
     assert!(contents.contains(r#"KEY2='value with '\''quotes'\''"#));
