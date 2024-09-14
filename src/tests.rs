@@ -174,8 +174,14 @@ fn test_set_quoted_values_through_args() {
     assert_eq!(env_vars.get("KEY1"), Some(&"simple value".to_string()));
     assert_eq!(env_vars.get("KEY2"), Some(&"quoted value".to_string()));
     assert_eq!(env_vars.get("KEY3"), Some(&"single quoted".to_string()));
-    assert_eq!(env_vars.get("KEY4"), Some(&r#"nested "quotes" 'here'"#.to_string()));
-    assert_eq!(env_vars.get("FOO"), Some(&r#"bing "baz" 'bar'"#.to_string()));
+    assert_eq!(
+        env_vars.get("KEY4"),
+        Some(&r#"nested "quotes" 'here'"#.to_string())
+    );
+    assert_eq!(
+        env_vars.get("FOO"),
+        Some(&r#"bing "baz" 'bar'"#.to_string())
+    );
 }
 
 #[test]
