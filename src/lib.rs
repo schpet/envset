@@ -227,11 +227,11 @@ fn needs_quoting(value: &str) -> bool {
 fn quote_value(value: &str) -> String {
     if needs_quoting(value) {
         if !value.contains('"') {
-            format!("\"{}\"", value.replace('\\', "\\\\"))
+            format!("\"{}\"", value.replace('\\', "\\\\").replace('\"', "\\\""))
         } else if !value.contains('\'') {
-            format!("'{}'", value)
+            format!("'{}'", value.replace('\\', "\\\\"))
         } else {
-            format!("\"{}\"", value.replace('"', "\\\"").replace('\\', "\\\\"))
+            format!("\"{}\"", value.replace('\\', "\\\\").replace('\"', "\\\""))
         }
     } else {
         value.to_string()
