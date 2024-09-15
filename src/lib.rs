@@ -154,13 +154,19 @@ pub fn print_all_env_vars(file_path: &str) {
 pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     match read_env_file(file_path) {
         Ok((env_vars, original_lines)) => {
+            let mut sorted_keys: Vec<_> = env_vars.keys().collect();
+            sorted_keys.sort();
+
             if original_lines.is_empty() {
-                for (key, value) in env_vars.iter() {
+                for key in sorted_keys {
+                    let value = env_vars.get(key).unwrap();
                     let quoted_value = quote_value(value);
                     writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
                 }
             } else {
                 let ast = parse(&original_lines.join("\n"));
+                let mut printed_keys = std::collections::HashSet::new();
+
                 for node in ast.iter() {
                     match node {
                         Node::KeyValue {
@@ -168,13 +174,16 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
                             value,
                             trailing_comment,
                         } => {
-                            let quoted_value = quote_value(value);
-                            let line = format!("{}={}", key, quoted_value);
-                            if let Some(comment) = trailing_comment {
-                                writeln!(writer, "{} {}", line.blue().bold(), comment.green())
-                                    .unwrap();
-                            } else {
-                                writeln!(writer, "{}", line.blue().bold()).unwrap();
+                            if env_vars.contains_key(key) {
+                                let quoted_value = quote_value(env_vars.get(key).unwrap());
+                                let line = format!("{}={}", key, quoted_value);
+                                if let Some(comment) = trailing_comment {
+                                    writeln!(writer, "{} {}", line.blue().bold(), comment.green())
+                                        .unwrap();
+                                } else {
+                                    writeln!(writer, "{}", line.blue().bold()).unwrap();
+                                }
+                                printed_keys.insert(key);
                             }
                         }
                         Node::Comment(comment) => {
@@ -183,6 +192,15 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
                         Node::EmptyLine => {
                             writeln!(writer).unwrap();
                         }
+                    }
+                }
+
+                // Print any new keys that weren't in the original file
+                for key in sorted_keys {
+                    if !printed_keys.contains(key) {
+                        let value = env_vars.get(key).unwrap();
+                        let quoted_value = quote_value(value);
+                        writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
                     }
                 }
             }
