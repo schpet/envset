@@ -152,85 +152,35 @@ pub fn print_all_env_vars(file_path: &str) {
 }
 
 pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    match read_env_file(file_path) {
-        Ok((env_vars, original_lines)) => {
-            print_all_env_vars_to_writer_internal(&env_vars, &original_lines, writer);
-        }
-        Err(_) => {
-            eprintln!("Error reading .env file");
-        }
-    }
-}
-
-fn print_all_env_vars_to_writer_internal<W: Write>(
-    env_vars: &HashMap<String, String>,
-    original_lines: &[String],
-    writer: &mut W,
-) {
-    let mut sorted_keys: Vec<_> = env_vars.keys().collect();
-    sorted_keys.sort();
-
-    if original_lines.is_empty() {
-        println!("No original lines found. Printing all environment variables:");
-        for key in sorted_keys {
-            let value = env_vars.get(key).unwrap();
-            let quoted_value = quote_value(value);
-            writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
-        }
-    } else {
-
-        println!("Printing all environment variables with original lines:");
-
-        let ast = parse(&original_lines.join("\n"));
-
-        // debug original lines
-        println!("Original lines: {:?}", original_lines);
-
-        // debug ast
-        println!("AST: {:?}", ast);
-
-
-        let mut printed_keys = std::collections::HashSet::new();
-
-        for node in ast.iter() {
-            match node {
-                Node::KeyValue {
-                    key,
-                    value: _,
-                    trailing_comment,
-                } => {
-                    if env_vars.contains_key(key) {
-                        let quoted_value = quote_value(env_vars.get(key).unwrap());
+    match fs::read_to_string(file_path) {
+        Ok(content) => {
+            let ast = parse(&content);
+            for node in ast.iter() {
+                match node {
+                    Node::KeyValue {
+                        key,
+                        value,
+                        trailing_comment,
+                    } => {
+                        let quoted_value = quote_value(value);
                         let line = format!("{}={}", key, quoted_value);
                         if let Some(comment) = trailing_comment {
                             writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
                         } else {
                             writeln!(writer, "{}", line.blue().bold()).unwrap();
                         }
-                        printed_keys.insert(key);
                     }
-                }
-                Node::Comment(comment) => {
-                    writeln!(writer, "{}", comment.green()).unwrap();
-                }
-                Node::EmptyLine => {
-                    writeln!(writer).unwrap();
+                    Node::Comment(comment) => {
+                        writeln!(writer, "{}", comment.green()).unwrap();
+                    }
+                    Node::EmptyLine => {
+                        writeln!(writer).unwrap();
+                    }
                 }
             }
         }
-
-
-        println!("Printing new environment variables");
-
-        // Print any new keys that weren't in the original file
-        for key in sorted_keys {
-            if !printed_keys.contains(key) {
-                // debug...
-                println!("New key found: {}", key);
-                let value = env_vars.get(key).unwrap();
-                let quoted_value = quote_value(value);
-                writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
-            }
+        Err(_) => {
+            eprintln!("Error reading .env file");
         }
     }
 }
