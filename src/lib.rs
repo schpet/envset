@@ -1,6 +1,6 @@
 pub mod parse;
 
-use crate::parse::{parse, Ast, Node};
+use crate::parse::{parse, Node};
 use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
