@@ -90,9 +90,6 @@ pub fn write_env_file(
         }
     }
 
-    // Sort new variables to ensure consistent order
-    new_vars.sort_by(|a, b| a.0.cmp(b.0));
-
     // Second pass: write new variables
     for (key, value) in new_vars {
         writeln!(file, "{}={}", key, quote_value(value))?;
