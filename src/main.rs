@@ -121,6 +121,9 @@ fn main() {
     } else {
         HashMap::new()
     };
+    // debug cli.vars and new_vars
+    println!("CLI vars: {:?}", cli.vars);
+    println!("New vars: {:?}", new_vars);
 
     if !new_vars.is_empty() {
         should_print = false; // Don't print all vars when setting new ones
@@ -145,6 +148,8 @@ fn main() {
             }
         }
 
+        // debug new_vars
+        println!("New vars: {:?}", new_vars);
         if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
             eprintln!("Error writing .env file: {}", e);
             process::exit(1);

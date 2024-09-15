@@ -162,8 +162,8 @@ fn test_set_quoted_values_through_args() {
         "KEY1=simple value".to_string(),
         r#"KEY2="quoted value""#.to_string(),
         r#"KEY3='single quoted'"#.to_string(),
-        r#"KEY4="nested \"quotes\" 'here'""#.to_string(),
-        r#"FOO="bing \"baz\" 'bar'""#.to_string(),
+        r#"KEY4="nested "quotes" 'here'""#.to_string(),
+        r#"FOO="bing "baz" 'bar'""#.to_string(),
     ];
     let result = parse_args(&args);
 
