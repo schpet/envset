@@ -361,7 +361,9 @@ fn test_print_all_env_vars() {
 
     use strip_ansi_escapes::strip;
 
-    let stripped_output = String::from_utf8(strip(&output_str).expect("Failed to strip ANSI escapes")).expect("Invalid UTF-8");
+    let stripped_output =
+        String::from_utf8(strip(&output_str).expect("Failed to strip ANSI escapes"))
+            .expect("Invalid UTF-8");
     assert_eq!(
         stripped_output.trim(),
         "ABC=123\nBAZ=qux\nFOO=bar",
