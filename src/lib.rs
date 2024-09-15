@@ -171,7 +171,8 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
                             let quoted_value = quote_value(value);
                             let line = format!("{}={}", key, quoted_value);
                             if let Some(comment) = trailing_comment {
-                                writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
+                                writeln!(writer, "{} {}", line.blue().bold(), comment.green())
+                                    .unwrap();
                             } else {
                                 writeln!(writer, "{}", line.blue().bold()).unwrap();
                             }
