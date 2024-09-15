@@ -97,7 +97,7 @@ fn test_read_env_file() {
     let mut file = File::create(&file_path).unwrap();
     writeln!(file, "KEY1=value1\nKEY2=value2").unwrap();
 
-    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
     assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
 }
@@ -111,7 +111,7 @@ fn test_write_env_file() {
     env_vars.insert("KEY2".to_string(), "value2".to_string());
 
     let original_lines = vec!["# Comment".to_string(), "EXISTING=old".to_string()];
-    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     let contents = fs::read_to_string(file_path).unwrap();
     assert!(contents.contains("# Comment"));
@@ -169,7 +169,7 @@ fn test_set_quoted_values_through_args() {
 
     write_env_file(file_path.to_str().unwrap(), &result, &[]).unwrap();
 
-    let (env_vars, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
 
     assert_eq!(env_vars.get("KEY1"), Some(&"simple value".to_string()));
     assert_eq!(env_vars.get("KEY2"), Some(&"quoted value".to_string()));

@@ -56,7 +56,7 @@ fn main() {
 
     match &cli.command {
         Some(Commands::Get { key }) => match read_env_file(&cli.file) {
-            Ok((env_vars, _)) => match env_vars.get(key) {
+            Ok(env_vars) => match env_vars.get(key) {
                 Some(value) => println!("{}", value),
                 None => {
                     eprintln!("Environment variable '{}' not found", key);
@@ -75,7 +75,7 @@ fn main() {
             print_all_keys(&cli.file);
         }
         Some(Commands::Delete { keys }) => {
-            let (env_vars, _) = match read_env_file(&cli.file) {
+            let env_vars = match read_env_file(&cli.file) {
                 Ok(result) => result,
                 Err(e) => {
                     eprintln!("Error reading .env file: {}", e);
@@ -90,7 +90,7 @@ fn main() {
                 process::exit(1);
             }
 
-            let (updated_env, _) = read_env_file(&cli.file).unwrap();
+            let updated_env = read_env_file(&cli.file).unwrap();
             print_diff(&original_env, &updated_env);
         }
         Some(Commands::Ast) => match std::fs::read_to_string(&cli.file) {
