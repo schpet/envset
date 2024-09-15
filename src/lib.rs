@@ -269,7 +269,10 @@ pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> 
         .collect::<Vec<String>>()
         .join("\n");
 
-    fs::write(file_path, updated_content)
+    // Remove trailing newline if present
+    let trimmed_content = updated_content.trim_end().to_string();
+
+    fs::write(file_path, trimmed_content)
 }
 
 fn needs_quoting(value: &str) -> bool {
