@@ -131,7 +131,7 @@ fn test_preserve_comments() {
     )
     .unwrap();
 
-    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("FOO"), Some(&"bar".to_string()));
     assert_eq!(result.get("BAZ"), Some(&"qux".to_string()));
 
@@ -167,7 +167,7 @@ fn test_set_quoted_values_through_args() {
     ];
     let result = parse_args(&args);
 
-    write_env_file(file_path.to_str().unwrap(), &result, &[]).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &result).unwrap();
 
     let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
 
@@ -204,7 +204,7 @@ fn test_parse_stdin_and_write_to_file() {
     assert!(contents.contains("KEY2=value2"));
 
     // Read the file using read_env_file and check the result
-    let (env_vars, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(env_vars.get("KEY1"), Some(&"value1".to_string()));
     assert_eq!(env_vars.get("KEY2"), Some(&"value2".to_string()));
     assert_eq!(env_vars.len(), 2);
@@ -260,12 +260,12 @@ fn test_multiple_var_sets() {
     let mut env_vars = HashMap::new();
     env_vars.insert("ABCD".to_string(), "123".to_string());
     let original_lines = Vec::new();
-    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     // Then set AB=12
     env_vars.insert("AB".to_string(), "12".to_string());
-    let (_, original_lines) = read_env_file(file_path.to_str().unwrap()).unwrap();
-    write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+    let _ = read_env_file(file_path.to_str().unwrap()).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     // Read the final state of the file
     let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
@@ -470,11 +470,10 @@ fn test_no_print_when_vars_set_via_stdin() {
         // Run the main logic
         let new_vars = parse_stdin_with_reader(&mut stdin);
         if !new_vars.is_empty() {
-            let (mut env_vars, original_lines) =
-                read_env_file(file_path.to_str().unwrap()).unwrap();
+            let mut env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
             let original_env = env_vars.clone();
             env_vars.extend(new_vars);
-            write_env_file(file_path.to_str().unwrap(), &env_vars, &original_lines).unwrap();
+            write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
             print_diff_to_writer(&original_env, &env_vars, &mut stdout);
         } else if cli.command.is_none() {
             print_all_env_vars_to_writer(file_path.to_str().unwrap(), &mut stdout);
