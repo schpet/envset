@@ -323,10 +323,22 @@ fn test_preserve_comments_when_setting_new_var() {
     write_env_file(file_path.to_str().unwrap(), &new_vars).unwrap();
 
     let final_content = fs::read_to_string(&file_path).unwrap();
-    assert!(final_content.contains("# This is a comment\n"), "First comment should be preserved");
-    assert!(final_content.contains("EXISTING=value\n"), "Existing variable should be preserved");
-    assert!(final_content.contains("\n# Another comment\n"), "Second comment should be preserved");
-    assert!(final_content.contains("NEW_VAR=new_value\n"), "New variable should be added");
+    assert!(
+        final_content.contains("# This is a comment\n"),
+        "First comment should be preserved"
+    );
+    assert!(
+        final_content.contains("EXISTING=value\n"),
+        "Existing variable should be preserved"
+    );
+    assert!(
+        final_content.contains("\n# Another comment\n"),
+        "Second comment should be preserved"
+    );
+    assert!(
+        final_content.contains("NEW_VAR=new_value\n"),
+        "New variable should be added"
+    );
 
     let env_vars = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert_eq!(env_vars.get("EXISTING"), Some(&"value".to_string()));
