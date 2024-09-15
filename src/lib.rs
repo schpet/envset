@@ -47,10 +47,26 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
             } => {
                 if !key.is_empty() {
                     if let Some(new_value) = env_vars.get(key) {
-                        writeln!(file, "{}={}{}", key, quote_value(new_value), trailing_comment.as_ref().map_or(String::new(), |c| format!(" {}", c)))?;
+                        writeln!(
+                            file,
+                            "{}={}{}",
+                            key,
+                            quote_value(new_value),
+                            trailing_comment
+                                .as_ref()
+                                .map_or(String::new(), |c| format!(" {}", c))
+                        )?;
                         written_keys.insert(key.to_string());
                     } else {
-                        writeln!(file, "{}={}{}", key, quote_value(value), trailing_comment.as_ref().map_or(String::new(), |c| format!(" {}", c)))?;
+                        writeln!(
+                            file,
+                            "{}={}{}",
+                            key,
+                            quote_value(value),
+                            trailing_comment
+                                .as_ref()
+                                .map_or(String::new(), |c| format!(" {}", c))
+                        )?;
                     }
                 }
             }
