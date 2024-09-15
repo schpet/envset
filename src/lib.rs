@@ -171,13 +171,25 @@ fn print_all_env_vars_to_writer_internal<W: Write>(
     sorted_keys.sort();
 
     if original_lines.is_empty() {
+        println!("No original lines found. Printing all environment variables:");
         for key in sorted_keys {
             let value = env_vars.get(key).unwrap();
             let quoted_value = quote_value(value);
             writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
         }
     } else {
+
+        println!("Printing all environment variables with original lines:");
+
         let ast = parse(&original_lines.join("\n"));
+
+        // debug original lines
+        println!("Original lines: {:?}", original_lines);
+
+        // debug ast
+        println!("AST: {:?}", ast);
+
+
         let mut printed_keys = std::collections::HashSet::new();
 
         for node in ast.iter() {
@@ -207,9 +219,14 @@ fn print_all_env_vars_to_writer_internal<W: Write>(
             }
         }
 
+
+        println!("Printing new environment variables");
+
         // Print any new keys that weren't in the original file
         for key in sorted_keys {
             if !printed_keys.contains(key) {
+                // debug...
+                println!("New key found: {}", key);
                 let value = env_vars.get(key).unwrap();
                 let quoted_value = quote_value(value);
                 writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
