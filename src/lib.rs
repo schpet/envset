@@ -175,7 +175,7 @@ pub fn print_all_keys(file_path: &str) {
 }
 
 pub fn print_all_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    if let Ok((env_vars, _)) = read_env_file(file_path) {
+    if let Ok(env_vars) = read_env_file(file_path) {
         for key in env_vars.keys() {
             writeln!(writer, "{}", key).unwrap();
         }
