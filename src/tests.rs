@@ -362,7 +362,7 @@ fn test_print_all_env_vars() {
     use strip_ansi_escapes::strip;
 
     let stripped_output = String::from_utf8(
-        strip(&output_str).unwrap_or_else(|e| panic!("Failed to strip ANSI escapes: {:?}", e)),
+        strip(&output_str).map_err(|e| panic!("Failed to strip ANSI escapes: {:?}", e)),
     )
     .expect("Invalid UTF-8");
     assert_eq!(
