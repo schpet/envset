@@ -52,7 +52,7 @@ pub fn write_env_file(
     let original_content = original_lines.join("\n");
     let ast = parse(&original_content);
 
-    // Write nodes, updating existing variables in place
+    // Write nodes, updating existing variables in place and keeping the original order
     for node in ast.iter() {
         match node {
             Node::KeyValue {
@@ -82,7 +82,7 @@ pub fn write_env_file(
         }
     }
 
-    // Write new variables at the end
+    // Write new variables at the end, maintaining their order of insertion
     for (key, value) in env_vars {
         if !written_keys.contains(key.as_str()) && !key.is_empty() {
             writeln!(file, "{}={}", key, quote_value(value))?;
