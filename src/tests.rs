@@ -258,7 +258,6 @@ fn test_multiple_var_sets() {
     // First set ABCD=123
     let mut env_vars = HashMap::new();
     env_vars.insert("ABCD".to_string(), "123".to_string());
-    let original_lines = Vec::new();
     write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     // Then set AB=12
@@ -321,7 +320,7 @@ fn test_get_single_env_var() {
     let mut file = File::create(&file_path).unwrap();
     writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
 
-    let (env_vars, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert_eq!(env_vars.get("FOO"), Some(&"bar".to_string()));
     assert_eq!(env_vars.get("BAZ"), Some(&"qux".to_string()));
 }
