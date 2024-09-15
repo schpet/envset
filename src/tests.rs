@@ -6,7 +6,7 @@ use tempfile::tempdir;
 use crate::{Cli, Commands};
 use envset::{
     parse_args, parse_env_content, parse_stdin_with_reader, print_all_env_vars_to_writer,
-    print_all_keys_to_writer, print_diff_to_writer, read_env_file, write_env_file,
+    print_all_keys_to_writer, print_diff_to_writer, read_env_vars, write_env_file,
 };
 
 #[test]
@@ -41,7 +41,7 @@ fn test_write_vars_with_quotes() {
     println!("File contents:\n{}", contents);
 
     // Read the file using read_env_file and check the result
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
 
     // Print out the environment variables for debugging
     println!("Environment variables:");
@@ -97,7 +97,7 @@ fn test_read_env_file() {
     let mut file = File::create(&file_path).unwrap();
     writeln!(file, "KEY1=value1\nKEY2=value2").unwrap();
 
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
     assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
 }
@@ -112,7 +112,7 @@ fn test_write_env_file() {
 
     write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
     assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
 }
@@ -128,7 +128,7 @@ fn test_preserve_comments() {
     )
     .unwrap();
 
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert_eq!(result.get("FOO"), Some(&"bar".to_string()));
     assert_eq!(result.get("BAZ"), Some(&"qux".to_string()));
 
@@ -166,7 +166,7 @@ fn test_set_quoted_values_through_args() {
 
     write_env_file(file_path.to_str().unwrap(), &result).unwrap();
 
-    let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let env_vars = read_env_vars(file_path.to_str().unwrap()).unwrap();
 
     assert_eq!(env_vars.get("KEY1"), Some(&"simple value".to_string()));
     assert_eq!(env_vars.get("KEY2"), Some(&"quoted value".to_string()));
@@ -201,7 +201,7 @@ fn test_parse_stdin_and_write_to_file() {
     assert!(contents.contains("KEY2=value2"));
 
     // Read the file using read_env_file and check the result
-    let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let env_vars = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert_eq!(env_vars.get("KEY1"), Some(&"value1".to_string()));
     assert_eq!(env_vars.get("KEY2"), Some(&"value2".to_string()));
     assert_eq!(env_vars.len(), 2);
@@ -260,11 +260,11 @@ fn test_multiple_var_sets() {
 
     // Then set AB=12
     env_vars.insert("AB".to_string(), "12".to_string());
-    let _ = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let _ = read_env_vars(file_path.to_str().unwrap()).unwrap();
     write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     // Read the final state of the file
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
 
     // Assert that both variables are set
     assert_eq!(result.get("ABCD"), Some(&"123".to_string()));
@@ -304,7 +304,7 @@ fn test_delete_env_vars() {
         "Final content should only contain BAZ=qux"
     );
 
-    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert!(!result.contains_key("FOO"), "FOO should be deleted");
     assert!(result.contains_key("BAZ"), "BAZ should still exist");
     assert!(!result.contains_key("QUUX"), "QUUX should be deleted");
@@ -318,7 +318,7 @@ fn test_get_single_env_var() {
     let mut file = File::create(&file_path).unwrap();
     writeln!(file, "FOO=bar\nBAZ=qux").unwrap();
 
-    let env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let env_vars = read_env_vars(file_path.to_str().unwrap()).unwrap();
     assert_eq!(env_vars.get("FOO"), Some(&"bar".to_string()));
     assert_eq!(env_vars.get("BAZ"), Some(&"qux".to_string()));
 }
@@ -466,7 +466,7 @@ fn test_no_print_when_vars_set_via_stdin() {
         // Run the main logic
         let new_vars = parse_stdin_with_reader(&mut stdin);
         if !new_vars.is_empty() {
-            let mut env_vars = read_env_file(file_path.to_str().unwrap()).unwrap();
+            let mut env_vars = read_env_vars(file_path.to_str().unwrap()).unwrap();
             let original_env = env_vars.clone();
             env_vars.extend(new_vars);
             write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();

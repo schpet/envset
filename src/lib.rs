@@ -7,7 +7,7 @@ use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
 
-pub fn read_env_file(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
+pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
     let path = Path::new(file_path);
     let mut env_vars = HashMap::new();
 
@@ -175,7 +175,7 @@ pub fn print_all_keys(file_path: &str) {
 }
 
 pub fn print_all_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    if let Ok(env_vars) = read_env_file(file_path) {
+    if let Ok(env_vars) = read_env_vars(file_path) {
         for key in env_vars.keys() {
             writeln!(writer, "{}", key).unwrap();
         }

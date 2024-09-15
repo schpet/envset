@@ -5,7 +5,7 @@ use std::process;
 
 use envset::parse::{parse, Ast};
 use envset::{
-    parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_file,
+    parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_vars,
     write_env_file,
 };
 
@@ -55,7 +55,7 @@ fn main() {
     let mut should_print = cli.command.is_none() && cli.vars.is_empty();
 
     match &cli.command {
-        Some(Commands::Get { key }) => match read_env_file(&cli.file) {
+        Some(Commands::Get { key }) => match read_env_vars(&cli.file) {
             Ok(env_vars) => match env_vars.get(key) {
                 Some(value) => println!("{}", value),
                 None => {
@@ -75,7 +75,7 @@ fn main() {
             print_all_keys(&cli.file);
         }
         Some(Commands::Delete { keys }) => {
-            let env_vars = match read_env_file(&cli.file) {
+            let env_vars = match read_env_vars(&cli.file) {
                 Ok(result) => result,
                 Err(e) => {
                     eprintln!("Error reading .env file: {}", e);
@@ -90,7 +90,7 @@ fn main() {
                 process::exit(1);
             }
 
-            let updated_env = read_env_file(&cli.file).unwrap();
+            let updated_env = read_env_vars(&cli.file).unwrap();
             print_diff(&original_env, &updated_env);
         }
         Some(Commands::Ast) => match std::fs::read_to_string(&cli.file) {
@@ -125,7 +125,7 @@ fn main() {
     if !new_vars.is_empty() {
         should_print = false; // Don't print all vars when setting new ones
         let no_overwrite = cli.no_overwrite;
-        let mut env_vars = match read_env_file(&cli.file) {
+        let mut env_vars = match read_env_vars(&cli.file) {
             Ok(result) => result,
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::NotFound {
