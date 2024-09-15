@@ -110,7 +110,6 @@ fn test_write_env_file() {
     env_vars.insert("KEY1".to_string(), "value1".to_string());
     env_vars.insert("KEY2".to_string(), "value2".to_string());
 
-    let original_lines = vec!["# Comment".to_string(), "EXISTING=old".to_string()];
     write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     let contents = fs::read_to_string(file_path).unwrap();
@@ -194,7 +193,7 @@ fn test_parse_stdin_and_write_to_file() {
     let result = parse_stdin_with_reader(&mut cursor);
 
     // Write the result to the temporary file
-    write_env_file(file_path.to_str().unwrap(), &result, &[]).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &result).unwrap();
 
     // Read the file contents
     let contents = fs::read_to_string(&file_path).unwrap();
@@ -268,7 +267,7 @@ fn test_multiple_var_sets() {
     write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     // Read the final state of the file
-    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
 
     // Assert that both variables are set
     assert_eq!(result.get("ABCD"), Some(&"123".to_string()));
@@ -308,7 +307,7 @@ fn test_delete_env_vars() {
         "Final content should only contain BAZ=qux"
     );
 
-    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
     assert!(!result.contains_key("FOO"), "FOO should be deleted");
     assert!(result.contains_key("BAZ"), "BAZ should still exist");
     assert!(!result.contains_key("QUUX"), "QUUX should be deleted");
