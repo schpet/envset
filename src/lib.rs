@@ -152,33 +152,43 @@ pub fn print_all_env_vars(file_path: &str) {
 }
 
 pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    if let Ok((_, original_lines)) = read_env_file(file_path) {
-        let ast = parse(&original_lines.join("\n"));
-        for node in ast.iter() {
-            match node {
-                Node::KeyValue {
-                    key,
-                    value,
-                    trailing_comment,
-                } => {
+    match read_env_file(file_path) {
+        Ok((env_vars, original_lines)) => {
+            if original_lines.is_empty() {
+                for (key, value) in env_vars.iter() {
                     let quoted_value = quote_value(value);
-                    let line = format!("{}={}", key, quoted_value);
-                    if let Some(comment) = trailing_comment {
-                        write!(writer, "{} {}\n", line.blue().bold(), comment.green()).unwrap();
-                    } else {
-                        writeln!(writer, "{}", line.blue().bold()).unwrap();
+                    writeln!(writer, "{}={}", key.blue().bold(), quoted_value.green()).unwrap();
+                }
+            } else {
+                let ast = parse(&original_lines.join("\n"));
+                for node in ast.iter() {
+                    match node {
+                        Node::KeyValue {
+                            key,
+                            value,
+                            trailing_comment,
+                        } => {
+                            let quoted_value = quote_value(value);
+                            let line = format!("{}={}", key, quoted_value);
+                            if let Some(comment) = trailing_comment {
+                                writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
+                            } else {
+                                writeln!(writer, "{}", line.blue().bold()).unwrap();
+                            }
+                        }
+                        Node::Comment(comment) => {
+                            writeln!(writer, "{}", comment.green()).unwrap();
+                        }
+                        Node::EmptyLine => {
+                            writeln!(writer).unwrap();
+                        }
                     }
-                }
-                Node::Comment(comment) => {
-                    writeln!(writer, "{}", comment.green()).unwrap();
-                }
-                Node::EmptyLine => {
-                    writeln!(writer).unwrap();
                 }
             }
         }
-    } else {
-        eprintln!("Error reading .env file");
+        Err(_) => {
+            eprintln!("Error reading .env file");
+        }
     }
 }
 
