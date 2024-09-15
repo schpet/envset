@@ -1,6 +1,6 @@
 pub mod parse;
 
-use crate::parse::{parse, Node, Ast};
+use crate::parse::{parse, Ast, Node};
 use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
@@ -156,7 +156,11 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
         let ast = parse(&original_lines.join("\n"));
         for node in ast.iter() {
             match node {
-                Node::KeyValue { key, value, trailing_comment } => {
+                Node::KeyValue {
+                    key,
+                    value,
+                    trailing_comment,
+                } => {
                     let quoted_value = quote_value(value);
                     let line = format!("{}={}", key, quoted_value);
                     if let Some(comment) = trailing_comment {
