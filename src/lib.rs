@@ -235,14 +235,41 @@ pub fn print_diff_to_writer<W: Write>(
 }
 
 pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
-    let (env_vars, original_lines) = read_env_file(file_path)?;
+    let content = fs::read_to_string(file_path)?;
+    let ast = parse::parse(&content);
 
-    let updated_env_vars: HashMap<String, String> = env_vars
-        .into_iter()
-        .filter(|(key, _)| !keys.contains(key))
+    let updated_nodes: Vec<parse::Node> = ast
+        .iter()
+        .filter(|node| {
+            if let parse::Node::KeyValue { key, .. } = node {
+                !keys.contains(key)
+            } else {
+                true
+            }
+        })
+        .cloned()
         .collect();
 
-    write_env_file(file_path, &updated_env_vars, &original_lines)
+    let updated_content = updated_nodes
+        .iter()
+        .map(|node| match node {
+            parse::Node::KeyValue {
+                key,
+                value,
+                trailing_comment,
+            } => {
+                let comment = trailing_comment
+                    .as_ref()
+                    .map_or(String::new(), |c| format!(" {}", c));
+                format!("{}={}{}", key, quote_value(value), comment)
+            }
+            parse::Node::Comment(comment) => comment.clone(),
+            parse::Node::EmptyLine => String::new(),
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    fs::write(file_path, updated_content)
 }
 
 fn needs_quoting(value: &str) -> bool {
