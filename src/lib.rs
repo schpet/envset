@@ -81,6 +81,9 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
         .filter(|(key, _)| !written_keys.contains(*key))
         .collect();
     new_vars.sort_by(|a, b| a.0.cmp(b.0));
+    if !new_vars.is_empty() && !ast.nodes.is_empty() {
+        writeln!(file)?; // Add a newline before new variables
+    }
     for (key, value) in new_vars {
         if !key.is_empty() {
             writeln!(file, "{}={}", key, quote_value(value))?;
