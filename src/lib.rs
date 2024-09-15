@@ -82,9 +82,14 @@ pub fn write_env_file(
         }
     }
 
-    // Write new variables at the end, maintaining their order of insertion
-    for (key, value) in env_vars {
-        if !written_keys.contains(key.as_str()) && !key.is_empty() {
+    // Write new variables at the end
+    let mut new_vars: Vec<_> = env_vars
+        .iter()
+        .filter(|(key, _)| !written_keys.contains(*key))
+        .collect();
+    new_vars.sort_by(|a, b| a.0.cmp(b.0));
+    for (key, value) in new_vars {
+        if !key.is_empty() {
             writeln!(file, "{}={}", key, quote_value(value))?;
         }
     }
