@@ -24,10 +24,7 @@ pub fn read_env_file(file_path: &str) -> Result<HashMap<String, String>, std::io
     Ok(env_vars)
 }
 
-pub fn write_env_file(
-    file_path: &str,
-    env_vars: &HashMap<String, String>,
-) -> std::io::Result<()> {
+pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
