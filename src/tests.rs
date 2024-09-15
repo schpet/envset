@@ -32,7 +32,7 @@ fn test_write_vars_with_quotes() {
         r#"value with both 'single' and "double" quotes"#.to_string(),
     );
 
-    write_env_file(file_path.to_str().unwrap(), &env_vars, &[]).unwrap();
+    write_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
 
     // Read the file contents
     let contents = fs::read_to_string(&file_path).unwrap();
@@ -41,7 +41,7 @@ fn test_write_vars_with_quotes() {
     println!("File contents:\n{}", contents);
 
     // Read the file using read_env_file and check the result
-    let (result, _) = read_env_file(file_path.to_str().unwrap()).unwrap();
+    let result = read_env_file(file_path.to_str().unwrap()).unwrap();
 
     // Print out the environment variables for debugging
     println!("Environment variables:");

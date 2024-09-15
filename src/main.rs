@@ -125,11 +125,11 @@ fn main() {
     if !new_vars.is_empty() {
         should_print = false; // Don't print all vars when setting new ones
         let no_overwrite = cli.no_overwrite;
-        let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
+        let mut env_vars = match read_env_file(&cli.file) {
             Ok(result) => result,
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::NotFound {
-                    (HashMap::new(), Vec::new())
+                    HashMap::new()
                 } else {
                     eprintln!("Error reading .env file: {}", e);
                     process::exit(1);
@@ -145,7 +145,7 @@ fn main() {
             }
         }
 
-        if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
+        if let Err(e) = write_env_file(&cli.file, &env_vars) {
             eprintln!("Error writing .env file: {}", e);
             process::exit(1);
         }

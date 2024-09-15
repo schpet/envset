@@ -7,38 +7,26 @@ use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
 
-pub fn read_env_file(
-    file_path: &str,
-) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
+pub fn read_env_file(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
     let path = Path::new(file_path);
     let mut env_vars = HashMap::new();
-    let mut original_lines = Vec::new();
 
     if path.exists() {
         let contents = fs::read_to_string(path)?;
         let ast = parse(&contents);
         for node in ast.iter() {
-            match node {
-                Node::KeyValue { key, value, .. } => {
-                    env_vars.insert(key.clone(), value.clone());
-                }
-                Node::Comment(comment) => {
-                    original_lines.push(comment.clone());
-                }
-                Node::EmptyLine => {
-                    original_lines.push(String::new());
-                }
+            if let Node::KeyValue { key, value, .. } = node {
+                env_vars.insert(key.clone(), value.clone());
             }
         }
     }
 
-    Ok((env_vars, original_lines))
+    Ok(env_vars)
 }
 
 pub fn write_env_file(
     file_path: &str,
     env_vars: &HashMap<String, String>,
-    original_lines: &[String],
 ) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
@@ -48,8 +36,8 @@ pub fn write_env_file(
 
     let mut written_keys = HashSet::new();
 
-    // Parse the original content
-    let original_content = original_lines.join("\n");
+    // Read the original content and parse it
+    let original_content = fs::read_to_string(file_path).unwrap_or_default();
     let ast = parse(&original_content);
 
     // Write nodes, updating existing variables in place and keeping the original order
