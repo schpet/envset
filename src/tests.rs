@@ -323,6 +323,7 @@ fn test_preserve_comments_when_setting_new_var() {
     write_env_file(file_path.to_str().unwrap(), &new_vars).unwrap();
 
     let final_content = fs::read_to_string(&file_path).unwrap();
+    println!("Final content:\n{}", final_content);
     assert!(
         final_content.contains("# This is a comment\n"),
         "First comment should be preserved"
