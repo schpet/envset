@@ -1,6 +1,6 @@
 pub mod parse;
 
-use crate::parse::{parse, Node};
+use crate::parse::{parse, Node, Ast};
 use colored::Colorize;
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, OpenOptions};
@@ -152,12 +152,25 @@ pub fn print_all_env_vars(file_path: &str) {
 }
 
 pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    if let Ok((env_vars, _)) = read_env_file(file_path) {
-        let mut sorted_keys: Vec<_> = env_vars.keys().collect();
-        sorted_keys.sort();
-        for key in sorted_keys {
-            if let Some(value) = env_vars.get(key) {
-                writeln!(writer, "{}={}", key.blue().bold(), value.green()).unwrap();
+    if let Ok((_, original_lines)) = read_env_file(file_path) {
+        let ast = parse(&original_lines.join("\n"));
+        for node in ast.iter() {
+            match node {
+                Node::KeyValue { key, value, trailing_comment } => {
+                    let quoted_value = quote_value(value);
+                    let line = format!("{}={}", key, quoted_value);
+                    if let Some(comment) = trailing_comment {
+                        write!(writer, "{} {}\n", line.blue().bold(), comment.green()).unwrap();
+                    } else {
+                        writeln!(writer, "{}", line.blue().bold()).unwrap();
+                    }
+                }
+                Node::Comment(comment) => {
+                    writeln!(writer, "{}", comment.green()).unwrap();
+                }
+                Node::EmptyLine => {
+                    writeln!(writer).unwrap();
+                }
             }
         }
     } else {
