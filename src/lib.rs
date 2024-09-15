@@ -112,9 +112,6 @@ pub fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, Strin
 }
 
 pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
-    // print out all vars for debugging
-    println!("Parsing args: {:?}", vars);
-
     vars.iter()
         .filter_map(|var| {
             let parts: Vec<&str> = var.splitn(2, '=').collect();
