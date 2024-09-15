@@ -47,13 +47,12 @@ pub fn write_env_file(
         .open(file_path)?;
 
     let mut written_keys = HashSet::new();
-    let mut new_vars = Vec::new();
 
     // Parse the original content
     let original_content = original_lines.join("\n");
     let ast = parse(&original_content);
 
-    // First pass: write existing nodes and update values
+    // Write nodes, updating existing variables in place
     for node in ast.iter() {
         match node {
             Node::KeyValue {
@@ -83,16 +82,11 @@ pub fn write_env_file(
         }
     }
 
-    // Collect new variables
+    // Write new variables at the end
     for (key, value) in env_vars {
         if !written_keys.contains(key.as_str()) && !key.is_empty() {
-            new_vars.push((key, value));
+            writeln!(file, "{}={}", key, quote_value(value))?;
         }
-    }
-
-    // Second pass: write new variables
-    for (key, value) in new_vars {
-        writeln!(file, "{}={}", key, quote_value(value))?;
     }
 
     Ok(())
