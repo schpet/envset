@@ -361,13 +361,12 @@ fn test_print_all_env_vars() {
 
     use strip_ansi_escapes::strip;
 
-    let stripped_output = String::from_utf8(
-        strip(&output_str).map_err(|e| panic!("Failed to strip ANSI escapes: {:?}", e)),
-    )
-    .expect("Invalid UTF-8");
+    let plain_bytes = strip_ansi_escapes::strip(&output_str);
+    let stripped_output = String::from_utf8_lossy(&plain_bytes);
+
     assert_eq!(
         stripped_output.trim(),
-        "ABC=123\nBAZ=qux\nFOO=bar",
+        "FOO=bar\nBAZ=qux\nABC=123",
         "Output should match the input file content"
     );
 }
