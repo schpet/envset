@@ -2,7 +2,7 @@ pub mod parse;
 
 use crate::parse::{parse, Node};
 use colored::Colorize;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
