@@ -25,19 +25,40 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
 }
 
 pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
+    let original_content = fs::read_to_string(file_path).unwrap_or_default();
+    let mut ast = parse(&original_content);
+
+    // Update existing nodes and add new ones
+    for (key, value) in env_vars {
+        if let Some(node) = ast.nodes.iter_mut().find(|node| {
+            if let Node::KeyValue { key: k, .. } = node {
+                k == key
+            } else {
+                false
+            }
+        }) {
+            if let Node::KeyValue { value: v, .. } = node {
+                *v = value.clone();
+            }
+        } else {
+            ast.add_node(Node::KeyValue {
+                key: key.clone(),
+                value: value.clone(),
+                trailing_comment: None,
+            });
+        }
+    }
+
+    write_ast_to_file(&ast, file_path)
+}
+
+fn write_ast_to_file(ast: &parse::Ast, file_path: &str) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
         .create(true)
         .open(file_path)?;
 
-    let mut written_keys = HashSet::new();
-
-    // Read the original content and parse it
-    let original_content = fs::read_to_string(file_path).unwrap_or_default();
-    let ast = parse(&original_content);
-
-    // Write nodes, updating existing variables in place and keeping the original order
     for node in ast.iter() {
         match node {
             Node::KeyValue {
@@ -45,48 +66,18 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
                 value,
                 trailing_comment,
             } => {
-                if !key.is_empty() {
-                    if let Some(new_value) = env_vars.get(key) {
-                        writeln!(
-                            file,
-                            "{}={}{}",
-                            key,
-                            quote_value(new_value),
-                            trailing_comment
-                                .as_ref()
-                                .map_or(String::new(), |c| format!(" {}", c))
-                        )?;
-                        written_keys.insert(key.to_string());
-                    } else {
-                        writeln!(
-                            file,
-                            "{}={}{}",
-                            key,
-                            quote_value(value),
-                            trailing_comment
-                                .as_ref()
-                                .map_or(String::new(), |c| format!(" {}", c))
-                        )?;
-                    }
-                }
+                writeln!(
+                    file,
+                    "{}={}{}",
+                    key,
+                    quote_value(value),
+                    trailing_comment
+                        .as_ref()
+                        .map_or(String::new(), |c| format!(" {}", c))
+                )?;
             }
             Node::Comment(comment) => writeln!(file, "{}", comment)?,
             Node::EmptyLine => writeln!(file)?,
-        }
-    }
-
-    // Write new variables at the end
-    let mut new_vars: Vec<_> = env_vars
-        .iter()
-        .filter(|(key, _)| !written_keys.contains(*key))
-        .collect();
-    new_vars.sort_by(|a, b| a.0.cmp(b.0));
-    if !new_vars.is_empty() && !ast.nodes.is_empty() {
-        writeln!(file)?; // Add a newline before new variables
-    }
-    for (key, value) in new_vars {
-        if !key.is_empty() {
-            writeln!(file, "{}={}", key, quote_value(value))?;
         }
     }
 
@@ -151,32 +142,36 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     match fs::read_to_string(file_path) {
         Ok(content) => {
             let ast = parse(&content);
-            for node in ast.iter() {
-                match node {
-                    Node::KeyValue {
-                        key,
-                        value,
-                        trailing_comment,
-                    } => {
-                        let quoted_value = quote_value(value);
-                        let line = format!("{}={}", key, quoted_value);
-                        if let Some(comment) = trailing_comment {
-                            writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
-                        } else {
-                            writeln!(writer, "{}", line.blue().bold()).unwrap();
-                        }
-                    }
-                    Node::Comment(comment) => {
-                        writeln!(writer, "{}", comment.green()).unwrap();
-                    }
-                    Node::EmptyLine => {
-                        writeln!(writer).unwrap();
-                    }
-                }
-            }
+            write_ast_to_writer(&ast, writer);
         }
         Err(_) => {
             eprintln!("Error reading .env file");
+        }
+    }
+}
+
+fn write_ast_to_writer<W: Write>(ast: &parse::Ast, writer: &mut W) {
+    for node in ast.iter() {
+        match node {
+            Node::KeyValue {
+                key,
+                value,
+                trailing_comment,
+            } => {
+                let quoted_value = quote_value(value);
+                let line = format!("{}={}", key, quoted_value);
+                if let Some(comment) = trailing_comment {
+                    writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
+                } else {
+                    writeln!(writer, "{}", line.blue().bold()).unwrap();
+                }
+            }
+            Node::Comment(comment) => {
+                writeln!(writer, "{}", comment.green()).unwrap();
+            }
+            Node::EmptyLine => {
+                writeln!(writer).unwrap();
+            }
         }
     }
 }
