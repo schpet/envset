@@ -27,10 +27,10 @@ peg::parser! {
             / "'" v:$((!['\'' | '\\'] [_] / "\\\\" / "\\'" )*) "'" { v.replace("\\'", "'").replace("\\\\", "\\") }
 
         rule value() -> String
-            = v:(quoted_value() / unquoted_value()) { v.to_string() }
+            = v:(quoted_value() / unquoted_value()) { v }
 
         rule pair() -> EnvEntry<'input>
-            = k:key() _ "=" _ v:value() _ c:comment()? eol() { EnvEntry::KeyValue(k, &v, c) }
+            = k:key() _ "=" _ v:value() _ c:comment()? eol() { EnvEntry::KeyValue(k, v, c) }
 
         rule comment_line() -> EnvEntry<'input>
             = _ c:comment() eol() { EnvEntry::Comment(c) }
@@ -42,6 +42,6 @@ peg::parser! {
             = pair() / comment_line() / empty_line()
 
         pub rule file() -> Vec<EnvEntry<'input>>
-            = lines:line()* { lines }
+            = l:(line() ** eol()) { l }
     }
 }
