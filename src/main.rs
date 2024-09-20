@@ -113,20 +113,14 @@ fn main() {
                 process::exit(1);
             }
         },
-        Some(Commands::Chumsky) => match std::fs::read_to_string(&cli.file) {
-            Ok(content) => match charser::parser().parse(content) {
-                Ok(result) => {
-                    for line in result {
-                        println!("{:?}", line);
-                    }
+        Some(Commands::Chumsky) => match envset::parse_chumsky(&cli.file) {
+            Ok(result) => {
+                for line in result {
+                    println!("{:?}", line);
                 }
-                Err(e) => {
-                    eprintln!("Error parsing .env file with Chumsky: {:?}", e);
-                    process::exit(1);
-                }
-            },
+            }
             Err(e) => {
-                eprintln!("Error reading .env file: {}", e);
+                eprintln!("{}", e);
                 process::exit(1);
             }
         },
