@@ -69,10 +69,10 @@ peg::parser!{
             = full_comment:whole_comment() { full_comment }
 
         rule whole_comment() -> String
-            = _ "#" c:$( [^"\n\r"]* ) { c.to_string().trim().to_string() }
+            = _ "#" c:$( [^"\n\r]* ) { c.to_string().trim().to_string() }
 
         rule trailing_comment() -> String
-            = _ "#" c:$( [^"\n\r"]* ) { c.to_string().trim().to_string() }
+            = _ "#" c:$( [^"\n\r]* ) { c.to_string().trim().to_string() }
 
         // Whitespace and line breaks
         rule _ = [ \t]*
