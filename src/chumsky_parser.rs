@@ -49,6 +49,7 @@ fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
     let comment = just('#')
         .ignore_then(take_until(end().or(just('\n'))))
         .map(|chars: Vec<char>| chars.into_iter().collect::<String>())
+        .or(end().to(String::new()))
         .padded();
 
     // Parse a key-value pair with optional comment
@@ -65,7 +66,8 @@ fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
     // Parse a line (key-value pair, comment, or empty line)
     let line = pair
         .or(comment.map(EnvEntry::Comment))
-        .or(just('\n').to(EnvEntry::Comment(String::new())));
+        .or(just('\n').to(EnvEntry::Comment(String::new())))
+        .or(end().to(EnvEntry::Comment(String::new())));
 
     // Parse the entire file
     line.padded().repeated().then_ignore(end())
