@@ -47,7 +47,7 @@ fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
 
     // Parse comment
     let comment = just('#')
-        .ignore_then(take_until(just('\n')))
+        .ignore_then(take_until(end().or(just('\n'))))
         .collect::<String>()
         .padded();
 
