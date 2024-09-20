@@ -10,7 +10,7 @@ pub enum Line {
     },
 }
 
-fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
+pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
     // Parser for comments
     let comment = just('#')
         .ignore_then(take_until(text::newline().or(end())))
