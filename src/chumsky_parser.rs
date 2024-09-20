@@ -102,3 +102,24 @@ fn unescape(s: &str) -> String {
 fn parse_env(input: &str) -> Result<Vec<EnvEntry>, Vec<Simple<char>>> {
     env_parser().parse(input)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_single_key() {
+        let input = "KEY=value\n";
+        let result = parse_env(input).unwrap();
+        assert_eq!(
+            result,
+            vec![
+                EnvEntry::KeyValue {
+                    key: "KEY".to_string(),
+                    value: "value".to_string(),
+                    comment: None,
+                }
+            ]
+        );
+    }
+}
