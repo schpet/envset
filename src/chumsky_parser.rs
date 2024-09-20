@@ -23,21 +23,13 @@ fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
 
     // Parse single-quoted value
     let single_quoted = just('\'')
-        .ignore_then(
-            escaped_char
-                .or(filter(|c| *c != '\''))
-                .repeated()
-        )
+        .ignore_then(escaped_char.or(filter(|c| *c != '\'')).repeated())
         .then_ignore(just('\''))
         .collect();
 
     // Parse double-quoted value
     let double_quoted = just('"')
-        .ignore_then(
-            escaped_char
-                .or(filter(|c| *c != '"'))
-                .repeated()
-        )
+        .ignore_then(escaped_char.or(filter(|c| *c != '"')).repeated())
         .then_ignore(just('"'))
         .collect();
 
@@ -74,9 +66,7 @@ fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
     let line = pair.or(comment.map(EnvEntry::Comment));
 
     // Parse the entire file
-    line.padded()
-        .repeated()
-        .then_ignore(end())
+    line.padded().repeated().then_ignore(end())
 }
 
 fn unescape(s: &str) -> String {
@@ -113,13 +103,11 @@ mod tests {
         let result = parse_env(input).unwrap();
         assert_eq!(
             result,
-            vec![
-                EnvEntry::KeyValue {
-                    key: "KEY".to_string(),
-                    value: "value".to_string(),
-                    comment: None,
-                }
-            ]
+            vec![EnvEntry::KeyValue {
+                key: "KEY".to_string(),
+                value: "value".to_string(),
+                comment: None,
+            }]
         );
     }
 }
