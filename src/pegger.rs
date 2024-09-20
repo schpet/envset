@@ -26,7 +26,7 @@ peg::parser! {
             = k:key() "=" v:value() c:trailing_comment()? {
                 EnvLine::KeyValue {
                     key: k.to_string(),
-                    value: v.to_string(),
+                    value: v.trim_end().to_string(),
                     comment: c.map(|s| s.to_string()),
                 }
             }
@@ -39,7 +39,7 @@ peg::parser! {
             / unquoted_value()
 
         rule quoted_value() -> &'input str
-            = "\"" v:$((!['"' | '\\'][_] / "\\\\" / "\\\"" )*) "\"" { v }
+            = "\"" v:$((!['"'][_] / "\\\\" / "\\\"" )*) "\"" { v.replace("\\\"", "\"") }
             / "'" v:$([^'\'']*) "'" { v }
 
         rule unquoted_value() -> &'input str
@@ -49,7 +49,7 @@ peg::parser! {
             = [' ' | '\t']* "#" s:$([^'\n']*) { s }
 
         rule empty_line() -> EnvLine
-            = [' ' | '\t']* { EnvLine::EmptyLine }
+            = [' ' | '\t']* "\n"? { EnvLine::EmptyLine }
     }
 }
 
@@ -143,7 +143,7 @@ QUOTED='single quoted'
         let result = env_parser::file(input);
         assert!(result.is_ok());
         let lines = result.unwrap();
-        assert_eq!(lines.len(), 6);
+        assert_eq!(lines.len(), 7);
         assert_eq!(lines[0], EnvLine::EmptyLine);
         assert_eq!(
             lines[1],
@@ -178,5 +178,6 @@ QUOTED='single quoted'
                 comment: None,
             }
         );
+        assert_eq!(lines[6], EnvLine::EmptyLine);
     }
 }
