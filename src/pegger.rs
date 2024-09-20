@@ -1,14 +1,14 @@
 use peg;
 
 #[derive(Debug)]
-enum EnvEntry<'a> {
+pub enum EnvEntry<'a> {
     KeyValue(&'a str, &'a str, Option<&'a str>), // (key, value, trailing_comment)
     Comment(&'a str),
     EmptyLine,
 }
 
 peg::parser! {
-    grammar env_parser() for str {
+    pub grammar env_parser() for str {
         rule _() = [' ' | '\t']*
 
         rule eol() = "\n" / "\r\n"

@@ -1,4 +1,5 @@
 pub mod parse;
+pub mod pegger;
 
 use crate::parse::{parse, Node};
 use colored::Colorize;
