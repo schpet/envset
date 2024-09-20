@@ -1,5 +1,4 @@
 use chumsky::prelude::*;
-use chumsky::Parser;
 
 #[derive(Debug)]
 pub enum Line {
@@ -11,7 +10,7 @@ pub enum Line {
     },
 }
 
-pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
+pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
     // Parser for comments
     let comment = just('#')
         .ignore_then(take_until(text::newline().or(end())))
