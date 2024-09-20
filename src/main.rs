@@ -47,8 +47,6 @@ enum Commands {
     },
     /// Print the AST as JSON
     Ast,
-    /// Parse and print the .env file using the PEG parser
-    Pegger,
 }
 
 fn main() {
@@ -106,34 +104,6 @@ fn main() {
                     }
                 }
             }
-            Err(e) => {
-                eprintln!("Error reading .env file: {}", e);
-                process::exit(1);
-            }
-        },
-        Some(Commands::Pegger) => match std::fs::read_to_string(&cli.file) {
-            Ok(content) => match envset::pegger::env_parser::file(&content) {
-                Ok(result) => {
-                    for entry in result {
-                        match entry {
-                            envset::pegger::EnvLine::KeyValue {
-                                key,
-                                value,
-                                comment,
-                            } => {
-                                print!("{}: '{}'", key, value);
-                                if let Some(c) = comment {
-                                    print!(" # {}", c);
-                                }
-                                println!();
-                            }
-                            envset::pegger::EnvLine::Comment(comment) => println!("# {}", comment),
-                            envset::pegger::EnvLine::EmptyLine => println!(),
-                        }
-                    }
-                }
-                Err(e) => eprintln!("Parsing error: {}", e),
-            },
             Err(e) => {
                 eprintln!("Error reading .env file: {}", e);
                 process::exit(1);
