@@ -111,34 +111,30 @@ fn main() {
                 process::exit(1);
             }
         },
-        Some(Commands::Pegger) => {
-            match std::fs::read_to_string(&cli.file) {
-                Ok(content) => {
-                    match envset::pegger::env_parser::file(&content) {
-                        Ok(result) => {
-                            for entry in result {
-                                match entry {
-                                    envset::pegger::EnvEntry::KeyValue(key, value, comment) => {
-                                        print!("{}: '{}'", key, value);
-                                        if let Some(c) = comment {
-                                            print!(" # {}", c);
-                                        }
-                                        println!();
-                                    }
-                                    envset::pegger::EnvEntry::Comment(comment) => println!("# {}", comment),
-                                    envset::pegger::EnvEntry::EmptyLine => println!(),
+        Some(Commands::Pegger) => match std::fs::read_to_string(&cli.file) {
+            Ok(content) => match envset::pegger::env_parser::file(&content) {
+                Ok(result) => {
+                    for entry in result {
+                        match entry {
+                            envset::pegger::EnvEntry::KeyValue(key, value, comment) => {
+                                print!("{}: '{}'", key, value);
+                                if let Some(c) = comment {
+                                    print!(" # {}", c);
                                 }
+                                println!();
                             }
+                            envset::pegger::EnvEntry::Comment(comment) => println!("# {}", comment),
+                            envset::pegger::EnvEntry::EmptyLine => println!(),
                         }
-                        Err(e) => eprintln!("Parsing error: {}", e),
                     }
                 }
-                Err(e) => {
-                    eprintln!("Error reading .env file: {}", e);
-                    process::exit(1);
-                }
+                Err(e) => eprintln!("Parsing error: {}", e),
+            },
+            Err(e) => {
+                eprintln!("Error reading .env file: {}", e);
+                process::exit(1);
             }
-        }
+        },
         None => {}
     }
 
