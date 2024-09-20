@@ -1,4 +1,5 @@
 use chumsky::prelude::*;
+use chumsky::Parser;
 
 #[derive(Debug)]
 pub enum Line {
