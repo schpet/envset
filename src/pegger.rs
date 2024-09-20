@@ -13,10 +13,10 @@ peg::parser! {
     pub grammar env_parser() for str {
         pub rule file() -> Vec<EnvLine>
             = lines:((line() eol())* line()?) {
-                lines.into_iter().flatten().collect()
+                lines.into_iter().flatten().filter_map(|x| x).collect()
             }
 
-        rule eol() = ['\n' | '\r' | '\r\n']
+        rule eol() = ['\n' | '\r'] / "\r\n"
 
         pub rule line() -> EnvLine
             = comment()
