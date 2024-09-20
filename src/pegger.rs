@@ -1,47 +1,81 @@
-use peg;
+use peg::error::ParseError;
 
 #[derive(Debug)]
-pub enum EnvEntry<'a> {
-    KeyValue(&'a str, &'a str, Option<&'a str>), // (key, value, trailing_comment)
-    Comment(&'a str),
-    EmptyLine,
+pub enum EnvLine {
+    KeyValue {
+        key: String,
+        value: String,
+        comment: Option<String>, // Trailing comment
+    },
+    Comment(String), // Whole-line comment
 }
 
-peg::parser! {
-    pub grammar env_parser() for str {
-        rule _() = [' ' | '\t']*
+peg::parser!{
+    grammar env_parser() for str {
 
-        rule eol() = "\n" / "\r\n" / ![_]
+        use std::str::FromStr;
 
-        rule comment() -> &'input str
-            = "#" s:$((!eol() [_])*) { s }
+        pub rule parse() -> Vec<EnvLine>
+            = _ lines:(env_line() ** ("\r\n" / "\n")) _ {
+                lines
+            }
 
-        rule key() -> &'input str
-            = s:$(['a'..='z' | 'A'..='Z' | '_']['a'..='z' | 'A'..='Z' | '0'..='9' | '_' | '.']*) { s }
+        rule env_line() -> EnvLine
+            = c:comment() {
+                EnvLine::Comment(c)
+            }
+            / kv:key_value() {
+                kv
+            }
 
-        rule unquoted_value() -> &'input str
-            = s:$((!comment() !eol() [^ '\t' | ' ' | '"' | '\'']+)) { s.trim() }
+        rule key_value() -> EnvLine
+            = key:key() _ "=" _ value:value() _ comment:trailing_comment()? {
+                EnvLine::KeyValue {
+                    key,
+                    value,
+                    comment,
+                }
+            }
 
-        rule quoted_value() -> String
-            = "\"" v:$((!['"' | '\\'] [_] / "\\\\" / "\\\"" )*) "\"" { v.replace("\\\"", "\"").replace("\\\\", "\\") }
-            / "'" v:$((!['\'' | '\\'] [_] / "\\\\" / "\\'" )*) "'" { v.replace("\\'", "'").replace("\\\\", "\\") }
+        rule key() -> String
+            = s:$([a-zA-Z0-9_]+) { s.to_string() }
 
         rule value() -> String
-            = v:(quoted_value() / unquoted_value()) { v }
+            = quoted_value() / unquoted_value()
 
-        rule pair() -> EnvEntry<'input>
-            = k:key() _ "=" _ v:value() _ c:comment()? eol() { EnvEntry::KeyValue(k, v, c) }
+        rule quoted_value() -> String
+            = q:("\"") v:double_quoted_content() "\"" { v }
 
-        rule comment_line() -> EnvEntry<'input>
-            = _ c:comment() eol() { EnvEntry::Comment(c) }
+        rule double_quoted_content() -> String
+            = s:(double_quoted_char()*) { s.concat() }
 
-        rule empty_line() -> EnvEntry<'input>
-            = _ eol() { EnvEntry::EmptyLine }
+        rule double_quoted_char() -> String
+            = "\\" c:[\\"nrt] {
+                match c {
+                    '\\' => "\\".to_string(),
+                    '"' => "\"".to_string(),
+                    'n' => "\n".to_string(),
+                    'r' => "\r".to_string(),
+                    't' => "\t".to_string(),
+                    _ => c.to_string(),
+                }
+            }
+            / [^"\\]
 
-        rule line() -> EnvEntry<'input>
-            = pair() / comment_line() / empty_line()
+        rule unquoted_value() -> String
+            = s:$([^#\n\r]*) { s.trim().to_string() }
 
-        pub rule file() -> Vec<EnvEntry<'input>>
-            = l:(line() ** eol()) { l }
+        rule comment() -> String
+            = full_comment:whole_comment() { full_comment }
+
+        rule whole_comment() -> String
+            = _ "#" c:$( [^"\n\r"]* ) { c.to_string().trim().to_string() }
+
+        rule trailing_comment() -> String
+            = _ "#" c:$( [^"\n\r"]* ) { c.to_string().trim().to_string() }
+
+        // Whitespace and line breaks
+        rule _ = [ \t]*
+
     }
 }
