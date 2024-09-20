@@ -116,7 +116,11 @@ fn main() {
                 Ok(result) => {
                     for entry in result {
                         match entry {
-                            envset::pegger::EnvLine::KeyValue { key, value, comment } => {
+                            envset::pegger::EnvLine::KeyValue {
+                                key,
+                                value,
+                                comment,
+                            } => {
                                 print!("{}: '{}'", key, value);
                                 if let Some(c) = comment {
                                     print!(" # {}", c);
