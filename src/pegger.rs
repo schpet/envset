@@ -13,16 +13,16 @@ peg::parser! {
     pub grammar env_parser() for str {
         pub rule file() -> Vec<EnvLine>
             = lines:((line() eol())* line()?) {
-                lines.into_iter().flatten().filter_map(|x| x).collect()
+                lines.into_iter().flatten().collect()
             }
 
         rule eol() = ['\n' | '\r'] / "\r\n"
 
-        pub rule line() -> EnvLine
+        pub rule line() -> Option<EnvLine>
             = comment()
             / key_value()
             / empty_line()
-            / s:$([^'\n']+) { EnvLine::KeyValue { key: "".to_string(), value: s.trim().to_string(), comment: None } }
+            / s:$([^'\n']+) { Some(EnvLine::KeyValue { key: "".to_string(), value: s.trim().to_string(), comment: None }) }
 
         rule comment() -> EnvLine
             = "#" s:$([^'\n']*) { EnvLine::Comment(s.to_string()) }
