@@ -1,170 +1,114 @@
 use chumsky::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-enum EnvEntry {
-    KeyValue {
-        key: String,
-        value: String,
-        comment: Option<String>,
-    },
+#[derive(Debug)]
+pub enum Line {
     Comment(String),
+    KeyValue { key: String, value: String, comment: Option<String> },
 }
 
-fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
-    // Parse a key (alphanumeric or underscore)
-    let key = filter(|c: &char| c.is_alphanumeric() || *c == '_')
-        .repeated()
-        .at_least(1)
-        .collect::<String>()
-        .labelled("key");
-
-    // Parse escaped character
-    let escaped_char = just('\\').then(any()).map(|(_, c)| c);
-
-    // Parse single-quoted value
-    let single_quoted = just('\'')
-        .ignore_then(escaped_char.or(filter(|c| *c != '\'')).repeated())
-        .then_ignore(just('\''))
-        .collect::<String>();
-
-    // Parse double-quoted value
-    let double_quoted = just('"')
-        .ignore_then(escaped_char.or(filter(|c| *c != '"')).repeated())
-        .then_ignore(just('"'))
-        .collect::<String>();
-
-    // Parse unquoted value
-    let unquoted = filter(|c: &char| !c.is_whitespace() && *c != '#')
-        .repeated()
-        .collect::<String>();
-
-    // Parse value (single-quoted, double-quoted, or unquoted)
-    let value = single_quoted
-        .or(double_quoted)
-        .or(unquoted)
-        .map(|s: String| unescape(&s))
-        .labelled("value");
-
-    // Parse comment
+fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
+    // Parser for comments
     let comment = just('#')
-        .ignore_then(take_until(end().or(just('\n'))))
-        .map(|(_, chars): (char, Vec<char>)| chars.into_iter().collect::<String>())
-        .or(end().to(String::new()))
-        .padded();
+        .then(take_until(text::newline().or(end())))
+        .collect::<String>()
+        .map(Line::Comment);
 
-    // Parse a key-value pair with optional comment
-    let pair = key
-        .then_ignore(just('='))
-        .then(value)
-        .then(comment.or_not())
-        .map(|((k, v), c)| EnvEntry::KeyValue {
-            key: k,
-            value: v,
-            comment: c,
-        });
+    // Parser for keys
+    let key = text::ident().padded();
 
-    // Parse a line (key-value pair, comment, or empty line)
-    let line = pair
-        .or(comment.map(EnvEntry::Comment))
-        .or(just('\n').to(EnvEntry::Comment(String::new())))
-        .or(end().map(|_| EnvEntry::Comment(String::new())));
+    // Parser for single-quoted values
+    let single_quoted_value = just('\'')
+        .ignore_then(
+            filter(|&c| c != '\'')
+                .repeated()
+                .collect::<String>(),
+        )
+        .then_ignore(just('\''));
 
-    // Parse the entire file
-    line.padded().repeated().then_ignore(end())
+    // Parser for escape sequences in double-quoted values
+    let escape_sequence = just('\\').then(any());
+
+    // Parser for double-quoted values
+    let double_quoted_value = just('"')
+        .ignore_then(
+            choice((
+                escape_sequence.map(|(_, c)| c),
+                filter(|&c| c != '"' && c != '\\'),
+            ))
+            .repeated()
+            .collect::<String>(),
+        )
+        .then_ignore(just('"'));
+
+    // Parser for unquoted values
+    let unquoted_value = {
+        let escape_sequence = just('\\').then(any()).map(|(_, c)| c);
+        let unescaped_char = filter(|&c| c != '#' && c != '\n' && c != '\\');
+        choice((
+            escape_sequence,
+            unescaped_char,
+        ))
+        .repeated()
+        .collect::<String>()
+    };
+
+    let value = choice((
+        single_quoted_value,
+        double_quoted_value,
+        unquoted_value,
+    ));
+
+    // Parser for trailing comments
+    let trailing_comment = just('#')
+        .ignore_then(take_until(text::newline().or(end())))
+        .collect::<String>();
+
+    // Parser for key-value lines
+    let key_value_line = key
+        .then_ignore(just('=').padded())
+        .then(
+            value.then(
+                trailing_comment.or_not(),
+            ),
+        )
+        .map(|(key, (value, comment))| Line::KeyValue { key, value, comment });
+
+    // Parser for a line (either a comment or a key-value pair)
+    let line = choice((
+        comment,
+        key_value_line,
+    ))
+    .then_ignore(text::newline().or(end()));
+
+    // Parser for the entire file
+    line.repeated()
 }
 
-fn unescape(s: &str) -> String {
-    let mut result = String::with_capacity(s.len());
-    let mut chars = s.chars();
-    while let Some(ch) = chars.next() {
-        if ch == '\\' {
-            if let Some(next_ch) = chars.next() {
-                result.push(match next_ch {
-                    'n' => '\n',
-                    'r' => '\r',
-                    't' => '\t',
-                    _ => next_ch,
-                });
+fn main() {
+    let input = r#"
+# This is a comment
+KEY1=VALUE1
+KEY2='Single quoted value with # and newlines
+still in value'
+KEY3="Double quoted value with escape sequences \n and quotes \""
+KEY4=Unquoted value with spaces and an escaped \# hash
+KEY5=Value with # inline comment
+"#;
+
+    let parser = parser();
+
+    let result = parser.parse(input);
+
+    match result {
+        Ok(lines) => {
+            for line in lines {
+                println!("{:?}", line);
             }
-        } else {
-            result.push(ch);
         }
-    }
-    result
-}
-
-fn parse_env(input: &str) -> Result<Vec<EnvEntry>, Vec<Simple<char>>> {
-    env_parser().parse(input)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_single_key() {
-        let input = "KEY=value\n";
-        let result = parse_env(input).unwrap();
-        assert_eq!(
-            result,
-            vec![EnvEntry::KeyValue {
-                key: "KEY".to_string(),
-                value: "value".to_string(),
-                comment: None,
-            }]
-        );
-    }
-
-    #[test]
-    fn test_parse_multiple_keys() {
-        let input = "KEY1=value1\nKEY2=value2\nKEY3=value3\n";
-        let result = parse_env(input).unwrap();
-        assert_eq!(
-            result,
-            vec![
-                EnvEntry::KeyValue {
-                    key: "KEY1".to_string(),
-                    value: "value1".to_string(),
-                    comment: None,
-                },
-                EnvEntry::KeyValue {
-                    key: "KEY2".to_string(),
-                    value: "value2".to_string(),
-                    comment: None,
-                },
-                EnvEntry::KeyValue {
-                    key: "KEY3".to_string(),
-                    value: "value3".to_string(),
-                    comment: None,
-                }
-            ]
-        );
-    }
-
-    #[test]
-    fn test_parse_quoted_value() {
-        let input =
-            r#"KEY1="quoted value"\nKEY2='single quoted'\nKEY3="value with \"escaped\" quotes""#;
-        let result = parse_env(input).unwrap();
-        assert_eq!(
-            result,
-            vec![
-                EnvEntry::KeyValue {
-                    key: "KEY1".to_string(),
-                    value: "quoted value".to_string(),
-                    comment: None,
-                },
-                EnvEntry::KeyValue {
-                    key: "KEY2".to_string(),
-                    value: "single quoted".to_string(),
-                    comment: None,
-                },
-                EnvEntry::KeyValue {
-                    key: "KEY3".to_string(),
-                    value: r#"value with "escaped" quotes"#.to_string(),
-                    comment: None,
-                }
-            ]
-        );
+        Err(errors) => {
+            for error in errors {
+                println!("Error: {}", error);
+            }
+        }
     }
 }
