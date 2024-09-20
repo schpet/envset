@@ -39,7 +39,7 @@ peg::parser! {
             / unquoted_value()
 
         rule quoted_value() -> &'input str
-            = "\"" v:$((!['"'][_] / "\\\\" / "\\\"" )*) "\"" { v.replace("\\\"", "\"") }
+            = "\"" v:$((!['"'][_] / "\\\\" / "\\\"" )*) "\"" { v }
             / "'" v:$([^'\'']*) "'" { v }
 
         rule unquoted_value() -> &'input str
