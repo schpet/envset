@@ -139,7 +139,8 @@ mod tests {
 
     #[test]
     fn test_parse_quoted_value() {
-        let input = r#"KEY1="quoted value"\nKEY2='single quoted'\nKEY3="value with \"escaped\" quotes""#;
+        let input =
+            r#"KEY1="quoted value"\nKEY2='single quoted'\nKEY3="value with \"escaped\" quotes""#;
         let result = parse_env(input).unwrap();
         assert_eq!(
             result,
