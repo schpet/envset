@@ -96,4 +96,32 @@ mod tests {
             _ => panic!("Expected KeyValue, got {:?}", result[0]),
         }
     }
+
+    #[test]
+    fn test_multiple_key_value_pairs() {
+        let input = "KEY1=value1\nKEY2=value2\nKEY3=value3\n";
+        let result = parser().parse(input).unwrap();
+        assert_eq!(result.len(), 3);
+
+        let expected = vec![
+            ("KEY1", "value1"),
+            ("KEY2", "value2"),
+            ("KEY3", "value3"),
+        ];
+
+        for (i, (expected_key, expected_value)) in expected.iter().enumerate() {
+            match &result[i] {
+                Line::KeyValue {
+                    key,
+                    value,
+                    comment,
+                } => {
+                    assert_eq!(key, expected_key);
+                    assert_eq!(value, expected_value);
+                    assert_eq!(comment, &None);
+                }
+                _ => panic!("Expected KeyValue, got {:?}", result[i]),
+            }
+        }
+    }
 }
