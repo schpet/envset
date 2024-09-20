@@ -12,9 +12,11 @@ pub enum EnvLine {
 peg::parser! {
     pub grammar env_parser() for str {
         pub rule file() -> Vec<EnvLine>
-            = l:(line() ** eol()) eol()* { l }
+            = lines:((line() eol())* line()?) {
+                lines.into_iter().flatten().collect()
+            }
 
-        rule eol() = "\n" / "\r\n"
+        rule eol() = ['\n' | '\r' | '\r\n']
 
         pub rule line() -> EnvLine
             = comment()
@@ -153,26 +155,29 @@ QUOTED='single quoted'
 This line has no equals sign
 "#;
         let result = env_parser::file(input);
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Failed to parse multiple lines: {:?}", result.err());
         let lines = result.unwrap();
-        assert_eq!(lines.len(), 7);
-        assert_eq!(lines[0], EnvLine::EmptyLine);
+        assert_eq!(lines.len(), 7, "Expected 7 lines, got {}", lines.len());
+        
+        assert_eq!(lines[0], EnvLine::EmptyLine, "First line should be empty");
         assert_eq!(
             lines[1],
             EnvLine::KeyValue {
                 key: "FOO".to_string(),
                 value: "bar".to_string(),
                 comment: None,
-            }
+            },
+            "Second line should be FOO=bar"
         );
-        assert_eq!(lines[2], EnvLine::Comment(" This is a comment".to_string()));
+        assert_eq!(lines[2], EnvLine::Comment(" This is a comment".to_string()), "Third line should be a comment");
         assert_eq!(
             lines[3],
             EnvLine::KeyValue {
                 key: "KEY".to_string(),
                 value: "value with spaces".to_string(),
                 comment: None,
-            }
+            },
+            "Fourth line should be KEY=value with spaces"
         );
         assert_eq!(
             lines[4],
@@ -180,7 +185,8 @@ This line has no equals sign
                 key: "EMPTY".to_string(),
                 value: "".to_string(),
                 comment: None,
-            }
+            },
+            "Fifth line should be EMPTY="
         );
         assert_eq!(
             lines[5],
@@ -188,7 +194,8 @@ This line has no equals sign
                 key: "QUOTED".to_string(),
                 value: "single quoted".to_string(),
                 comment: None,
-            }
+            },
+            "Sixth line should be QUOTED='single quoted'"
         );
         assert_eq!(
             lines[6],
@@ -196,7 +203,8 @@ This line has no equals sign
                 key: "".to_string(),
                 value: "This line has no equals sign".to_string(),
                 comment: None,
-            }
+            },
+            "Seventh line should be 'This line has no equals sign'"
         );
     }
 }
