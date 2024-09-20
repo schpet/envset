@@ -152,4 +152,44 @@ mod tests {
             _ => panic!("Expected KeyValue, got {:?}", result[0]),
         }
     }
+
+    #[test]
+    fn test_env_var_with_mixed_comments() {
+        let input = "# Comment before\nKEY1=value1\n# Comment in between\nKEY2=value2\n# Comment after\n";
+        let result = parser().parse(input).unwrap();
+        assert_eq!(result.len(), 5);
+
+        match &result[0] {
+            Line::Comment(comment) => assert_eq!(comment, " Comment before"),
+            _ => panic!("Expected Comment, got {:?}", result[0]),
+        }
+
+        match &result[1] {
+            Line::KeyValue { key, value, comment } => {
+                assert_eq!(key, "KEY1");
+                assert_eq!(value, "value1");
+                assert_eq!(comment, &None);
+            },
+            _ => panic!("Expected KeyValue, got {:?}", result[1]),
+        }
+
+        match &result[2] {
+            Line::Comment(comment) => assert_eq!(comment, " Comment in between"),
+            _ => panic!("Expected Comment, got {:?}", result[2]),
+        }
+
+        match &result[3] {
+            Line::KeyValue { key, value, comment } => {
+                assert_eq!(key, "KEY2");
+                assert_eq!(value, "value2");
+                assert_eq!(comment, &None);
+            },
+            _ => panic!("Expected KeyValue, got {:?}", result[3]),
+        }
+
+        match &result[4] {
+            Line::Comment(comment) => assert_eq!(comment, " Comment after"),
+            _ => panic!("Expected Comment, got {:?}", result[4]),
+        }
+    }
 }
