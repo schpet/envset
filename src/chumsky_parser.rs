@@ -120,4 +120,17 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_whole_line_comment() {
+        let input = "# This is a comment\n";
+        let result = parser().parse(input).unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            Line::Comment(comment) => {
+                assert_eq!(comment, " This is a comment");
+            }
+            _ => panic!("Expected Comment, got {:?}", result[0]),
+        }
+    }
 }
