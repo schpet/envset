@@ -83,32 +83,3 @@ fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
     // Parser for the entire file
     line.repeated()
 }
-
-fn main() {
-    let input = r#"
-# This is a comment
-KEY1=VALUE1
-KEY2='Single quoted value with # and newlines
-still in value'
-KEY3="Double quoted value with escape sequences \n and quotes \""
-KEY4=Unquoted value with spaces and an escaped \# hash
-KEY5=Value with # inline comment
-"#;
-
-    let parser = parser();
-
-    let result = parser.parse(input);
-
-    match result {
-        Ok(lines) => {
-            for line in lines {
-                println!("{:?}", line);
-            }
-        }
-        Err(errors) => {
-            for error in errors {
-                println!("Error: {}", error);
-            }
-        }
-    }
-}
