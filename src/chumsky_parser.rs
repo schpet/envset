@@ -14,7 +14,7 @@ fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
     // Parser for comments
     let comment = just('#')
         .ignore_then(take_until(text::newline().or(end())))
-        .collect::<String>()
+        .map(|(chars, _)| chars.into_iter().collect::<String>())
         .map(Line::Comment);
 
     // Parser for keys
@@ -54,7 +54,7 @@ fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
     // Parser for trailing comments
     let trailing_comment = just('#')
         .ignore_then(take_until(text::newline().or(end())))
-        .collect::<String>()
+        .map(|(chars, _)| chars.into_iter().collect::<String>())
         .boxed();
 
     // Parser for key-value lines
