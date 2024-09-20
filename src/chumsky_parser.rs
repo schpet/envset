@@ -133,4 +133,23 @@ mod tests {
             _ => panic!("Expected Comment, got {:?}", result[0]),
         }
     }
+
+    #[test]
+    fn test_key_value_with_trailing_comment() {
+        let input = "KEY=value # This is a trailing comment\n";
+        let result = parser().parse(input).unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            Line::KeyValue {
+                key,
+                value,
+                comment,
+            } => {
+                assert_eq!(key, "KEY");
+                assert_eq!(value, "value");
+                assert_eq!(comment, &Some(" This is a trailing comment".to_string()));
+            }
+            _ => panic!("Expected KeyValue, got {:?}", result[0]),
+        }
+    }
 }
