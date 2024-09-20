@@ -73,3 +73,23 @@ fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> {
     // Parser for the entire file
     line.repeated()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple_key_value_pair() {
+        let input = "KEY=value\n";
+        let result = parser().parse(input).unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            Line::KeyValue { key, value, comment } => {
+                assert_eq!(key, "KEY");
+                assert_eq!(value, "value");
+                assert_eq!(comment, &None);
+            }
+            _ => panic!("Expected KeyValue, got {:?}", result[0]),
+        }
+    }
+}
