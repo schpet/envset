@@ -103,11 +103,7 @@ mod tests {
         let result = parser().parse(input).unwrap();
         assert_eq!(result.len(), 3);
 
-        let expected = vec![
-            ("KEY1", "value1"),
-            ("KEY2", "value2"),
-            ("KEY3", "value3"),
-        ];
+        let expected = vec![("KEY1", "value1"), ("KEY2", "value2"), ("KEY3", "value3")];
 
         for (i, (expected_key, expected_value)) in expected.iter().enumerate() {
             match &result[i] {
