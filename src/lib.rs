@@ -1,11 +1,15 @@
 pub mod parse;
 
+mod charser;
+
 use crate::parse::{parse, Node};
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
 use std::path::Path;
+use chumsky::Parser;
+
 
 pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
     let path = Path::new(file_path);
