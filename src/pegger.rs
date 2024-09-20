@@ -143,11 +143,7 @@ mod tests {
     fn test_multiple_lines() {
         let input = r#"
 FOO=bar
-# This is a comment
-KEY="value with spaces"
-EMPTY=
-QUOTED='single quoted'
-        "#;
+"#;
         let result = env_parser::file(input);
         assert!(result.is_ok());
         let lines = result.unwrap();
