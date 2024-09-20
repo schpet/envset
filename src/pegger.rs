@@ -50,7 +50,7 @@ peg::parser!{
             = s:(double_quoted_char()*) { s.concat() }
 
         rule double_quoted_char() -> String
-            = "\\" c:[\\"nrt] {
+            = "\\" c:['\\' | '"' | 'n' | 'r' | 't'] {
                 match c {
                     '\\' => "\\".to_string(),
                     '"' => "\"".to_string(),
