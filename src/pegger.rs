@@ -12,12 +12,15 @@ pub enum EnvLine {
 peg::parser! {
     pub grammar env_parser() for str {
         pub rule file() -> Vec<EnvLine>
-            = l:(line() ** "\n") "\n"* { l }
+            = l:(line() ** eol()) eol()* { l }
+
+        rule eol() = "\n" / "\r\n"
 
         pub rule line() -> EnvLine
             = comment()
             / key_value()
             / empty_line()
+            / s:$([^'\n']+) { EnvLine::KeyValue { key: "".to_string(), value: s.trim().to_string(), comment: None } }
 
         rule comment() -> EnvLine
             = "#" s:$([^'\n']*) { EnvLine::Comment(s.to_string()) }
@@ -143,6 +146,11 @@ mod tests {
     fn test_multiple_lines() {
         let input = r#"
 FOO=bar
+# This is a comment
+KEY=value with spaces
+EMPTY=
+QUOTED='single quoted'
+This line has no equals sign
 "#;
         let result = env_parser::file(input);
         assert!(result.is_ok());
@@ -182,6 +190,13 @@ FOO=bar
                 comment: None,
             }
         );
-        assert_eq!(lines[6], EnvLine::EmptyLine);
+        assert_eq!(
+            lines[6],
+            EnvLine::KeyValue {
+                key: "".to_string(),
+                value: "This line has no equals sign".to_string(),
+                comment: None,
+            }
+        );
     }
 }
