@@ -19,19 +19,19 @@ fn env_parser() -> impl Parser<char, Vec<EnvEntry>, Error = Simple<char>> {
         .labelled("key");
 
     // Parse escaped character
-    let escaped_char = just('\\').ignore_then(any());
+    let escaped_char = just('\\').then(any()).map(|(_, c)| c);
 
     // Parse single-quoted value
     let single_quoted = just('\'')
         .ignore_then(escaped_char.or(filter(|c| *c != '\'')).repeated())
         .then_ignore(just('\''))
-        .collect();
+        .collect::<String>();
 
     // Parse double-quoted value
     let double_quoted = just('"')
         .ignore_then(escaped_char.or(filter(|c| *c != '"')).repeated())
         .then_ignore(just('"'))
-        .collect();
+        .collect::<String>();
 
     // Parse unquoted value
     let unquoted = filter(|c: &char| !c.is_whitespace() && *c != '#')
