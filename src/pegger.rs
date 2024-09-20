@@ -155,10 +155,14 @@ QUOTED='single quoted'
 This line has no equals sign
 "#;
         let result = env_parser::file(input);
-        assert!(result.is_ok(), "Failed to parse multiple lines: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "Failed to parse multiple lines: {:?}",
+            result.err()
+        );
         let lines = result.unwrap();
         assert_eq!(lines.len(), 7, "Expected 7 lines, got {}", lines.len());
-        
+
         assert_eq!(lines[0], EnvLine::EmptyLine, "First line should be empty");
         assert_eq!(
             lines[1],
@@ -169,7 +173,11 @@ This line has no equals sign
             },
             "Second line should be FOO=bar"
         );
-        assert_eq!(lines[2], EnvLine::Comment(" This is a comment".to_string()), "Third line should be a comment");
+        assert_eq!(
+            lines[2],
+            EnvLine::Comment(" This is a comment".to_string()),
+            "Third line should be a comment"
+        );
         assert_eq!(
             lines[3],
             EnvLine::KeyValue {
