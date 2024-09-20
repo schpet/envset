@@ -110,4 +110,30 @@ mod tests {
             }]
         );
     }
+
+    #[test]
+    fn test_parse_multiple_keys() {
+        let input = "KEY1=value1\nKEY2=value2\nKEY3=value3\n";
+        let result = parse_env(input).unwrap();
+        assert_eq!(
+            result,
+            vec![
+                EnvEntry::KeyValue {
+                    key: "KEY1".to_string(),
+                    value: "value1".to_string(),
+                    comment: None,
+                },
+                EnvEntry::KeyValue {
+                    key: "KEY2".to_string(),
+                    value: "value2".to_string(),
+                    comment: None,
+                },
+                EnvEntry::KeyValue {
+                    key: "KEY3".to_string(),
+                    value: "value3".to_string(),
+                    comment: None,
+                }
+            ]
+        );
+    }
 }
