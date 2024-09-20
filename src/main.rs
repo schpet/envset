@@ -9,6 +9,8 @@ use envset::{
     write_env_file,
 };
 
+mod chumsky_parser;
+
 #[cfg(test)]
 mod tests;
 
