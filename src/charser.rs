@@ -59,19 +59,20 @@ pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
 
     // Parser for key-value lines
     let key_value_line = key
-        .then_ignore(just('=').padded())
-        .then(value.then(trailing_comment.or_not()))
-        .map(|(key, (value, comment))| Line::KeyValue {
+        .then_ignore(just('='))
+        .then(value.padded_by(just(' ').repeated()))
+        .then(trailing_comment.or_not())
+        .map(|((key, value), comment)| Line::KeyValue {
             key,
             value,
             comment,
         });
 
     // Parser for a line (either a comment or a key-value pair)
-    let line = choice((comment, key_value_line)).then_ignore(text::newline().or(end()));
+    let line = choice((comment, key_value_line));
 
     // Parser for the entire file
-    line.repeated()
+    line.padded_by(just('\n').repeated()).repeated()
 }
 
 #[cfg(test)]
