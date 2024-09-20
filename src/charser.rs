@@ -49,7 +49,8 @@ pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
             .collect::<String>()
     };
 
-    let value = choice((single_quoted_value, double_quoted_value, unquoted_value));
+    let value = choice((single_quoted_value, double_quoted_value, unquoted_value))
+        .map(|s| s.trim_end().to_string());
 
     // Parser for trailing comments
     let trailing_comment = just('#')
@@ -200,6 +201,21 @@ mod tests {
         match &result[4] {
             Line::Comment(comment) => assert_eq!(comment, " Comment after"),
             _ => panic!("Expected Comment, got {:?}", result[4]),
+        }
+    }
+
+    #[test]
+    fn test_value_with_trailing_whitespace() {
+        let input = "KEY=value with space   \n";
+        let result = parser().parse(input).unwrap();
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            Line::KeyValue { key, value, comment } => {
+                assert_eq!(key, "KEY");
+                assert_eq!(value, "value with space");
+                assert_eq!(comment, &None);
+            }
+            _ => panic!("Expected KeyValue, got {:?}", result[0]),
         }
     }
 }
