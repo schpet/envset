@@ -17,7 +17,7 @@ peg::parser! {
             = "#" s:$((!eol() [_])*) { s }
 
         rule key() -> &'input str
-            = s:$([a-zA-Z_] [a-zA-Z0-9_]*) { s }
+            = s:$(['a'..='z' | 'A'..='Z' | '_']['a'..='z' | 'A'..='Z' | '0'..='9' | '_']*) { s }
 
         rule value() -> &'input str
             = s:$((!comment() !eol() [_])*) { s.trim() }
