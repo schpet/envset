@@ -1,4 +1,3 @@
-use peg::error::ParseError;
 
 #[derive(Debug, PartialEq)]
 pub enum EnvLine {
@@ -14,9 +13,9 @@ pub enum EnvLine {
 peg::parser! {
     pub grammar env_parser() for str {
         pub rule file() -> Vec<EnvLine>
-            = (line() ** "\n") ** "\n"
+            = l:(line() ** "\n") "\n"* { l }
 
-        rule line() -> EnvLine
+        pub rule line() -> EnvLine
             = comment()
             / key_value()
             / empty_line()
