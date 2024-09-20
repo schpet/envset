@@ -84,7 +84,11 @@ mod tests {
         let result = parser().parse(input).unwrap();
         assert_eq!(result.len(), 1);
         match &result[0] {
-            Line::KeyValue { key, value, comment } => {
+            Line::KeyValue {
+                key,
+                value,
+                comment,
+            } => {
                 assert_eq!(key, "KEY");
                 assert_eq!(value, "value");
                 assert_eq!(comment, &None);
