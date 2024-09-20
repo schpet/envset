@@ -136,4 +136,30 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn test_parse_quoted_value() {
+        let input = r#"KEY1="quoted value"\nKEY2='single quoted'\nKEY3="value with \"escaped\" quotes""#;
+        let result = parse_env(input).unwrap();
+        assert_eq!(
+            result,
+            vec![
+                EnvEntry::KeyValue {
+                    key: "KEY1".to_string(),
+                    value: "quoted value".to_string(),
+                    comment: None,
+                },
+                EnvEntry::KeyValue {
+                    key: "KEY2".to_string(),
+                    value: "single quoted".to_string(),
+                    comment: None,
+                },
+                EnvEntry::KeyValue {
+                    key: "KEY3".to_string(),
+                    value: r#"value with "escaped" quotes"#.to_string(),
+                    comment: None,
+                }
+            ]
+        );
+    }
 }
