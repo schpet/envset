@@ -39,8 +39,8 @@ peg::parser! {
             / unquoted_value()
 
         rule quoted_value() -> &'input str
-            = "\"" v:$((!['"'][_] / "\\\\" / "\\\"" )*) "\"" { v }
-            / "'" v:$([^'\'']*) "'" { v }
+            = "\"" v:$((!['"'][_] / "\\\\" / "\\\"" )*) "\"" { v.replace("\\\"", "\"") }
+            / "'" v:$((!['\'']*) / "\\\\" / "\\'" )*) "'" { v.replace("\\'", "'") }
 
         rule unquoted_value() -> &'input str
             = $([^'#' | '\n']*)
@@ -100,6 +100,14 @@ mod tests {
             Ok(EnvLine::KeyValue {
                 key: "D".to_string(),
                 value: r#"foo"bar"#.to_string(),
+                comment: None,
+            })
+        );
+        assert_eq!(
+            env_parser::line(r#"E='foo\'bar'"#),
+            Ok(EnvLine::KeyValue {
+                key: "E".to_string(),
+                value: r#"foo'bar"#.to_string(),
                 comment: None,
             })
         );
