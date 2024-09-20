@@ -3,14 +3,13 @@ use clap::Parser;
 use std::collections::HashMap;
 use std::process;
 
-use chumsky::Parser;
 use envset::parse::{parse, Ast};
 use envset::{
     parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_vars,
     write_env_file,
 };
 
-mod chumsky_parser;
+mod charser;
 
 #[cfg(test)]
 mod tests;
@@ -115,7 +114,7 @@ fn main() {
             }
         },
         Some(Commands::Chumsky) => match std::fs::read_to_string(&cli.file) {
-            Ok(content) => match chumsky_parser::parser().parse(content) {
+            Ok(content) => match charser::parser().parse(content) {
                 Ok(result) => {
                     for line in result {
                         println!("{:?}", line);
