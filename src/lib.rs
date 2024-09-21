@@ -2,6 +2,7 @@ pub mod parse;
 
 mod charser;
 
+use crate::charser::{parser, Line};
 use crate::parse::{parse, Node};
 use chumsky::Parser;
 use colored::Colorize;
@@ -16,11 +17,16 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
 
     if path.exists() {
         let contents = fs::read_to_string(path)?;
-        let ast = parse(&contents);
-        for node in ast.iter() {
-            if let Node::KeyValue { key, value, .. } = node {
-                env_vars.insert(key.clone(), value.clone());
+        let result = parser().parse(contents);
+        match result {
+            Ok(lines) => {
+                for line in lines {
+                    if let Line::KeyValue { key, value, .. } = line {
+                        env_vars.insert(key, value);
+                    }
+                }
             }
+            Err(e) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e)),
         }
     }
 
