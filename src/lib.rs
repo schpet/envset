@@ -22,28 +22,46 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
 }
 
 pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
-    let original_content = fs::read_to_string(file_path).unwrap_or_default();
-    let existing_vars = parse_env_content(&original_content);
-
-    // Prepare the content to write
-    let mut content = original_content;
+    let content = fs::read_to_string(file_path).unwrap_or_default();
+    let mut lines = charser::parser().parse(&content).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Error parsing .env file: {:?}", e),
+        )
+    })?;
 
     // Add new variables at the end
     for (key, value) in env_vars {
-        if !existing_vars.contains_key(key) {
-            if !content.ends_with('\n') {
-                content.push('\n');
-            }
-            content.push_str(&format!("{}={}\n", key, quote_value(value)));
+        if !lines.iter().any(|line| matches!(line, charser::Line::KeyValue { key: k, .. } if k == key)) {
+            lines.push(charser::Line::KeyValue {
+                key: key.clone(),
+                value: value.clone(),
+                comment: None,
+            });
         }
     }
 
-    // Ensure there's always a trailing newline
-    if !content.ends_with('\n') {
-        content.push('\n');
-    }
+    // Convert the updated lines back to a string
+    let updated_content = lines
+        .iter()
+        .map(|line| match line {
+            charser::Line::Comment(comment) => format!("#{}", comment),
+            charser::Line::KeyValue { key, value, comment } => {
+                let comment_str = comment.as_ref().map_or(String::new(), |c| format!(" #{}", c));
+                format!("{}={}{}", key, quote_value(value), comment_str)
+            }
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
 
-    fs::write(file_path, content)
+    // Ensure there's always a trailing newline
+    let final_content = if updated_content.ends_with('\n') {
+        updated_content
+    } else {
+        updated_content + "\n"
+    };
+
+    fs::write(file_path, final_content)
 }
 
 fn write_ast_to_file(ast: &parse::Ast, file_path: &str) -> std::io::Result<()> {
