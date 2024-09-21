@@ -3,7 +3,8 @@ pub mod parse;
 mod charser;
 
 use crate::charser::{parser, Line};
-use crate::parse::{parse, Node};
+use crate::parse::Node;
+use crate::charser;
 use chumsky::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
@@ -131,16 +132,22 @@ fn remove_surrounding_quotes(s: &str) -> String {
 }
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {
-    let ast = parse(content);
-    ast.iter()
-        .filter_map(|node| {
-            if let Node::KeyValue { key, value, .. } = node {
-                Some((key.clone(), value.clone()))
-            } else {
-                None
-            }
-        })
-        .collect()
+    match charser::parser().parse(content) {
+        Ok(lines) => lines
+            .into_iter()
+            .filter_map(|line| {
+                if let charser::Line::KeyValue { key, value, .. } = line {
+                    Some((key, value))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+        Err(e) => {
+            eprintln!("Error parsing .env content: {:?}", e);
+            HashMap::new()
+        }
+    }
 }
 
 pub fn print_all_env_vars(file_path: &str) {
