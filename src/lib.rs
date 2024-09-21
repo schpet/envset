@@ -17,16 +17,16 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
 
     if path.exists() {
         let contents = fs::read_to_string(path)?;
-        let result = parser().parse(contents);
-        match result {
-            Ok(lines) => {
-                for line in lines {
-                    if let Line::KeyValue { key, value, .. } = line {
-                        env_vars.insert(key, value);
-                    }
-                }
+        let lines = parser().parse(contents).map_err(|e| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Error parsing .env file: {:?}", e),
+            )
+        })?;
+        for line in lines {
+            if let Line::KeyValue { key, value, .. } = line {
+                env_vars.insert(key, value);
             }
-            Err(e) => return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, e)),
         }
     }
 
@@ -297,12 +297,9 @@ fn quote_value(value: &str) -> String {
     }
 }
 
-pub fn parse_chumsky(file_path: &str) -> Result<Vec<charser::Line>, String> {
-    match std::fs::read_to_string(file_path) {
-        Ok(content) => match charser::parser().parse(content) {
-            Ok(result) => Ok(result),
-            Err(e) => Err(format!("Error parsing .env file with Chumsky: {:?}", e)),
-        },
-        Err(e) => Err(format!("Error reading .env file: {}", e)),
-    }
+pub fn parse_chumsky(file_path: &str) -> Result<Vec<charser::Line>, std::io::Error> {
+    let content = std::fs::read_to_string(file_path)?;
+    charser::parser()
+        .parse(content)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Error parsing .env file with Chumsky: {:?}", e)))
 }
