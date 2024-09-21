@@ -2,9 +2,9 @@ pub mod parse;
 
 mod charser;
 
+use crate::charser;
 use crate::charser::{parser, Line};
 use crate::parse::Node;
-use crate::charser;
 use chumsky::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
