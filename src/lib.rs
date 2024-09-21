@@ -41,33 +41,10 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
         }
     }
 
-    // Convert the updated lines back to a string
-    let updated_content = lines
-        .iter()
-        .map(|line| match line {
-            charser::Line::Comment(comment) => format!("#{}", comment),
-            charser::Line::KeyValue {
-                key,
-                value,
-                comment,
-            } => {
-                let comment_str = comment
-                    .as_ref()
-                    .map_or(String::new(), |c| format!(" #{}", c));
-                format!("{}={}{}", key, quote_value(value), comment_str)
-            }
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
+    let mut buffer = Vec::new();
+    write_chumsky_ast_to_writer(&lines, &mut buffer);
 
-    // Ensure there's always a trailing newline
-    let final_content = if updated_content.ends_with('\n') {
-        updated_content
-    } else {
-        updated_content + "\n"
-    };
-
-    fs::write(file_path, final_content)
+    fs::write(file_path, buffer)
 }
 
 pub fn parse_stdin() -> HashMap<String, String> {
