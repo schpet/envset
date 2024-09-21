@@ -73,38 +73,6 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
     fs::write(file_path, final_content)
 }
 
-fn write_ast_to_file(ast: &parse::Ast, file_path: &str) -> std::io::Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(file_path)?;
-
-    for node in ast.iter() {
-        match node {
-            Node::KeyValue {
-                key,
-                value,
-                trailing_comment,
-            } => {
-                writeln!(
-                    file,
-                    "{}={}{}",
-                    key,
-                    quote_value(value),
-                    trailing_comment
-                        .as_ref()
-                        .map_or(String::new(), |c| format!(" {}", c))
-                )?;
-            }
-            Node::Comment(comment) => writeln!(file, "{}", comment)?,
-            Node::EmptyLine => writeln!(file)?,
-        }
-    }
-
-    Ok(())
-}
-
 pub fn parse_stdin() -> HashMap<String, String> {
     parse_stdin_with_reader(&mut io::stdin())
 }
