@@ -2,8 +2,8 @@ pub mod parse;
 
 mod charser;
 
-use charser::{parser, Line};
 use crate::parse::{parse, Node};
+use charser::{parser, Line};
 use chumsky::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
@@ -13,7 +13,7 @@ use std::path::Path;
 
 pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
     let path = Path::new(file_path);
-    
+
     if path.exists() {
         let contents = fs::read_to_string(path)?;
         Ok(parse_env_content(&contents))
