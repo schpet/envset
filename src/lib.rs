@@ -255,47 +255,28 @@ pub fn print_diff_to_writer<W: Write>(
 
 pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
     let content = fs::read_to_string(file_path)?;
-    let ast = parse::parse(&content);
+    let lines = charser::parser().parse(&content).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Error parsing .env file: {:?}", e),
+        )
+    })?;
 
-    let updated_nodes: Vec<parse::Node> = ast
-        .iter()
-        .filter(|node| {
-            if let parse::Node::KeyValue { key, .. } = node {
+    let updated_lines: Vec<charser::Line> = lines
+        .into_iter()
+        .filter(|line| {
+            if let charser::Line::KeyValue { key, .. } = line {
                 !keys.contains(key)
             } else {
                 true
             }
         })
-        .cloned()
         .collect();
 
-    let updated_content = updated_nodes
-        .iter()
-        .map(|node| match node {
-            parse::Node::KeyValue {
-                key,
-                value,
-                trailing_comment,
-            } => {
-                let comment = trailing_comment
-                    .as_ref()
-                    .map_or(String::new(), |c| format!(" {}", c));
-                format!("{}={}{}", key, quote_value(value), comment)
-            }
-            parse::Node::Comment(comment) => comment.clone(),
-            parse::Node::EmptyLine => String::new(),
-        })
-        .collect::<Vec<String>>()
-        .join("\n");
+    let mut buffer = Vec::new();
+    write_chumsky_ast_to_writer(&updated_lines, &mut buffer)?;
 
-    // Ensure there's always a trailing newline
-    let final_content = if updated_content.ends_with('\n') {
-        updated_content
-    } else {
-        updated_content + "\n"
-    };
-
-    fs::write(file_path, final_content)
+    fs::write(file_path, buffer)
 }
 
 fn needs_quoting(value: &str) -> bool {
