@@ -2,11 +2,10 @@ pub mod parse;
 
 mod charser;
 
-use crate::parse::Node;
 use chumsky::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
+use std::fs;
 use std::io::{self, Read, Write};
 use std::path::Path;
 
