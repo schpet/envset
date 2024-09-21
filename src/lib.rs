@@ -3,6 +3,7 @@ pub mod parse;
 mod charser;
 
 use crate::parse::{parse, Node};
+use crate::charser;
 use charser::{parser, Line};
 use chumsky::Parser;
 use colored::Colorize;
@@ -176,6 +177,25 @@ fn write_ast_to_writer<W: Write>(ast: &parse::Ast, writer: &mut W) {
             }
             Node::EmptyLine => {
                 writeln!(writer).unwrap();
+            }
+        }
+    }
+}
+
+pub fn write_chumsky_ast_to_writer<W: Write>(lines: &[charser::Line], writer: &mut W) {
+    for line in lines {
+        match line {
+            charser::Line::KeyValue { key, value, comment } => {
+                let quoted_value = quote_value(value);
+                let line = format!("{}={}", key, quoted_value);
+                if let Some(comment) = comment {
+                    writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
+                } else {
+                    writeln!(writer, "{}", line.blue().bold()).unwrap();
+                }
+            }
+            charser::Line::Comment(comment) => {
+                writeln!(writer, "{}", comment.green()).unwrap();
             }
         }
     }
