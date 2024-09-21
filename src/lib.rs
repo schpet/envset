@@ -13,24 +13,13 @@ use std::path::Path;
 
 pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
     let path = Path::new(file_path);
-    let mut env_vars = HashMap::new();
-
+    
     if path.exists() {
         let contents = fs::read_to_string(path)?;
-        let lines = parser().parse(contents).map_err(|e| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                format!("Error parsing .env file: {:?}", e),
-            )
-        })?;
-        for line in lines {
-            if let Line::KeyValue { key, value, .. } = line {
-                env_vars.insert(key, value);
-            }
-        }
+        Ok(parse_env_content(&contents))
+    } else {
+        Ok(HashMap::new())
     }
-
-    Ok(env_vars)
 }
 
 pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
