@@ -158,32 +158,6 @@ pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     }
 }
 
-fn write_ast_to_writer<W: Write>(ast: &parse::Ast, writer: &mut W) {
-    for node in ast.iter() {
-        match node {
-            Node::KeyValue {
-                key,
-                value,
-                trailing_comment,
-            } => {
-                let quoted_value = quote_value(value);
-                let line = format!("{}={}", key, quoted_value);
-                if let Some(comment) = trailing_comment {
-                    writeln!(writer, "{} {}", line.blue().bold(), comment.green()).unwrap();
-                } else {
-                    writeln!(writer, "{}", line.blue().bold()).unwrap();
-                }
-            }
-            Node::Comment(comment) => {
-                writeln!(writer, "{}", comment.green()).unwrap();
-            }
-            Node::EmptyLine => {
-                writeln!(writer).unwrap();
-            }
-        }
-    }
-}
-
 pub fn write_chumsky_ast_to_writer<W: Write>(lines: &[charser::Line], writer: &mut W) {
     for line in lines {
         match line {
