@@ -32,7 +32,10 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
 
     // Add new variables at the end
     for (key, value) in env_vars {
-        if !lines.iter().any(|line| matches!(line, charser::Line::KeyValue { key: k, .. } if k == key)) {
+        if !lines
+            .iter()
+            .any(|line| matches!(line, charser::Line::KeyValue { key: k, .. } if k == key))
+        {
             lines.push(charser::Line::KeyValue {
                 key: key.clone(),
                 value: value.clone(),
@@ -46,8 +49,14 @@ pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
         .iter()
         .map(|line| match line {
             charser::Line::Comment(comment) => format!("#{}", comment),
-            charser::Line::KeyValue { key, value, comment } => {
-                let comment_str = comment.as_ref().map_or(String::new(), |c| format!(" #{}", c));
+            charser::Line::KeyValue {
+                key,
+                value,
+                comment,
+            } => {
+                let comment_str = comment
+                    .as_ref()
+                    .map_or(String::new(), |c| format!(" #{}", c));
                 format!("{}={}{}", key, quote_value(value), comment_str)
             }
         })
