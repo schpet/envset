@@ -3,7 +3,6 @@ use clap::Parser;
 use std::collections::HashMap;
 use std::process;
 
-use envset::parse::{parse, Ast};
 use envset::{
     parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_vars,
     write_env_file,
@@ -47,8 +46,6 @@ enum Commands {
         #[arg(required = true)]
         keys: Vec<String>,
     },
-    /// Print the AST as JSON
-    Ast,
     /// Parse the .env file using Chumsky parser and print the result
     Chumsky,
 }
@@ -97,22 +94,6 @@ fn main() {
             let updated_env = read_env_vars(&cli.file).unwrap();
             print_diff(&original_env, &updated_env);
         }
-        Some(Commands::Ast) => match std::fs::read_to_string(&cli.file) {
-            Ok(content) => {
-                let ast: Ast = parse(&content);
-                match serde_json::to_string_pretty(&ast) {
-                    Ok(json) => println!("{}", json),
-                    Err(e) => {
-                        eprintln!("Error serializing AST to JSON: {}", e);
-                        process::exit(1);
-                    }
-                }
-            }
-            Err(e) => {
-                eprintln!("Error reading .env file: {}", e);
-                process::exit(1);
-            }
-        },
         Some(Commands::Chumsky) => match envset::parse_chumsky(&cli.file) {
             Ok(result) => {
                 for line in result {

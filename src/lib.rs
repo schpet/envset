@@ -1,5 +1,3 @@
-pub mod parse;
-
 mod charser;
 
 use chumsky::Parser;
