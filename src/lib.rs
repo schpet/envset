@@ -2,7 +2,7 @@ pub mod parse;
 
 mod charser;
 
-use crate::parse::{parse, Node};
+use crate::parse::Node;
 use chumsky::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
@@ -23,7 +23,7 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
 
 pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
     let content = fs::read_to_string(file_path).unwrap_or_default();
-    let mut lines = charser::parser().parse(&content).map_err(|e| {
+    let mut lines = charser::parser().parse(&*content).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
             format!("Error parsing .env file: {:?}", e),
