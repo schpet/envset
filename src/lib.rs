@@ -2,9 +2,9 @@ pub mod parse;
 
 mod charser;
 
+use crate::charser;
 use crate::parse::Node;
 use chumsky::Parser;
-use crate::charser;
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fs::{self, OpenOptions};
@@ -145,16 +145,14 @@ pub fn print_all_env_vars(file_path: &str) {
 
 pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     match fs::read_to_string(file_path) {
-        Ok(content) => {
-            match charser::parser().parse(content) {
-                Ok(lines) => {
-                    write_chumsky_ast_to_writer(&lines, writer);
-                }
-                Err(e) => {
-                    eprintln!("Error parsing .env file: {:?}", e);
-                }
+        Ok(content) => match charser::parser().parse(content) {
+            Ok(lines) => {
+                write_chumsky_ast_to_writer(&lines, writer);
             }
-        }
+            Err(e) => {
+                eprintln!("Error parsing .env file: {:?}", e);
+            }
+        },
         Err(_) => {
             eprintln!("Error reading .env file");
         }
