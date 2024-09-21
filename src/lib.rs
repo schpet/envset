@@ -93,6 +93,7 @@ pub fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, Strin
 }
 
 pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
+    // TODO replace this with a chumsky based parser, too?
     vars.iter()
         .filter_map(|var| {
             let parts: Vec<&str> = var.splitn(2, '=').collect();
