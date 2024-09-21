@@ -2,8 +2,7 @@ pub mod parse;
 
 mod charser;
 
-use crate::charser;
-use crate::parse::Node;
+use crate::parse::{parse, Node};
 use chumsky::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
