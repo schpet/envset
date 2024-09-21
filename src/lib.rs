@@ -23,30 +23,28 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
 
 pub fn write_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
     let original_content = fs::read_to_string(file_path).unwrap_or_default();
-    let mut ast = parse(&original_content);
+    let mut existing_vars = parse_env_content(&original_content);
 
-    // Update existing nodes and add new ones
+    // Update existing variables and add new ones
     for (key, value) in env_vars {
-        if let Some(node) = ast.nodes.iter_mut().find(|node| {
-            if let Node::KeyValue { key: k, .. } = node {
-                k == key
-            } else {
-                false
-            }
-        }) {
-            if let Node::KeyValue { value: v, .. } = node {
-                *v = value.clone();
-            }
-        } else {
-            ast.add_node(Node::KeyValue {
-                key: key.clone(),
-                value: value.clone(),
-                trailing_comment: None,
-            });
-        }
+        existing_vars.insert(key.clone(), value.clone());
     }
 
-    write_ast_to_file(&ast, file_path)
+    // Convert the updated HashMap back to a string
+    let updated_content = existing_vars
+        .iter()
+        .map(|(key, value)| format!("{}={}", key, quote_value(value)))
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    // Ensure there's always a trailing newline
+    let final_content = if updated_content.ends_with('\n') {
+        updated_content
+    } else {
+        updated_content + "\n"
+    };
+
+    fs::write(file_path, final_content)
 }
 
 fn write_ast_to_file(ast: &parse::Ast, file_path: &str) -> std::io::Result<()> {
