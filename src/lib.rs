@@ -198,7 +198,7 @@ pub fn write_chumsky_ast_to_writer<W: Write>(lines: &[charser::Line], writer: &m
                 if let Some(comment) = comment {
                     line.push_str(&format!(" #{}", comment));
                 }
-                writeln!(writer, "{}", line.blue().bold()).unwrap();
+                writeln!(writer, "{}", line).unwrap();
             }
         }
     }
