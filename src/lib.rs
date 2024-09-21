@@ -299,7 +299,10 @@ fn quote_value(value: &str) -> String {
 
 pub fn parse_chumsky(file_path: &str) -> Result<Vec<charser::Line>, std::io::Error> {
     let content = std::fs::read_to_string(file_path)?;
-    charser::parser()
-        .parse(content)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("Error parsing .env file with Chumsky: {:?}", e)))
+    charser::parser().parse(content).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Error parsing .env file with Chumsky: {:?}", e),
+        )
+    })
 }
