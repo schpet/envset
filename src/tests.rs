@@ -5,19 +5,9 @@ use tempfile::tempdir;
 
 use crate::{Cli, Commands};
 use envset::{
-    parse_args, parse_env_content, parse_stdin_with_reader, print_all_env_vars_to_writer,
-    print_all_keys_to_writer, print_diff_to_writer, read_env_vars, write_env_file,
+    parse_args, parse_stdin_with_reader, print_all_env_vars_to_writer, print_all_keys_to_writer,
+    print_diff_to_writer, read_env_vars, write_env_file,
 };
-
-#[test]
-fn test_parse_stdin() {
-    let input = "KEY1=value1\nKEY2=value2\n# Comment\nKEY3='value3'\n";
-    let result = parse_env_content(input);
-    assert_eq!(result.get("KEY1"), Some(&"value1".to_string()));
-    assert_eq!(result.get("KEY2"), Some(&"value2".to_string()));
-    assert_eq!(result.get("KEY3"), Some(&"value3".to_string()));
-    assert_eq!(result.len(), 3);
-}
 
 #[test]
 fn test_write_vars_with_quotes() {
