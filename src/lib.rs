@@ -255,7 +255,7 @@ pub fn print_diff_to_writer<W: Write>(
 
 pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
     let content = fs::read_to_string(file_path)?;
-    let lines = charser::parser().parse(&content).map_err(|e| {
+    let lines = charser::parser().parse(&*content).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
             format!("Error parsing .env file: {:?}", e),
@@ -274,7 +274,7 @@ pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> 
         .collect();
 
     let mut buffer = Vec::new();
-    write_chumsky_ast_to_writer(&updated_lines, &mut buffer)?;
+    write_chumsky_ast_to_writer(&updated_lines, &mut buffer);
 
     fs::write(file_path, buffer)
 }
