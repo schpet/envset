@@ -188,7 +188,7 @@ pub fn write_chumsky_ast_to_writer<W: Write>(lines: &[charser::Line], writer: &m
     for line in lines {
         match line {
             charser::Line::Comment(comment) => {
-                writeln!(writer, "# {}", comment).unwrap();
+                writeln!(writer, "#{}", comment).unwrap();
             }
             charser::Line::KeyValue {
                 key,
@@ -198,7 +198,7 @@ pub fn write_chumsky_ast_to_writer<W: Write>(lines: &[charser::Line], writer: &m
                 let quoted_value = quote_value(value);
                 let mut line = format!("{}={}", key, quoted_value);
                 if let Some(comment) = comment {
-                    line.push_str(&format!(" # {}", comment));
+                    line.push_str(&format!(" #{}", comment));
                 }
                 writeln!(writer, "{}", line.blue().bold()).unwrap();
             }
