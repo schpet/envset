@@ -1,6 +1,6 @@
 [package]
 name = "envset"
-version = "0.1.11"
+version = "0.1.12"
 edition = "2021"
 description = "A command-line tool for setting environment variables in a .env file"
 license = "ISC"
