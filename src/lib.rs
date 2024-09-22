@@ -266,14 +266,8 @@ fn quote_value(value: &str) -> String {
                     quoted.push('\\');
                     quoted.push(c);
                 }
-                '\n' => {
-                    quoted.push_str("\\n");
-                }
-                '\r' => {
-                    quoted.push_str("\\r");
-                }
-                '\t' => {
-                    quoted.push_str("\\t");
+                '\n' | '\r' | '\t' => {
+                    quoted.push(c);
                 }
                 _ => {
                     quoted.push(c);
