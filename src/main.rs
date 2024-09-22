@@ -1,12 +1,40 @@
 use atty::Stream;
 use clap::Parser;
+use colored::Colorize;
+use similar::{ChangeTag, TextDiff};
 use std::collections::HashMap;
 use std::process;
 
 use envset::{
-    parse_args, parse_stdin, print_diff, print_env_file, print_env_keys_to_writer, print_env_vars,
-    print_env_vars_as_json, print_parse_tree, read_env_vars,
+    add_env_vars, parse_args, parse_stdin, print_env_file_contents, print_env_keys_to_writer,
+    print_env_vars, print_env_vars_as_json, print_parse_tree, read_env_file_contents,
+    read_env_vars,
 };
+
+fn print_diff(old_content: &str, new_content: &str, use_color: bool) {
+    let diff = TextDiff::from_lines(old_content, new_content);
+
+    for change in diff.iter_all_changes() {
+        if use_color {
+            match change.tag() {
+                ChangeTag::Delete => print!("{}", change.to_string().trim_end().on_bright_red()),
+                ChangeTag::Insert => print!("{}", change.to_string().trim_end().on_bright_green()),
+                ChangeTag::Equal => print!("{}", change),
+            }
+            // Print a newline after each colored line
+            if change.tag() != ChangeTag::Equal {
+                println!();
+            }
+        } else {
+            let sign = match change.tag() {
+                ChangeTag::Delete => "-",
+                ChangeTag::Insert => "+",
+                ChangeTag::Equal => " ",
+            };
+            print!("{}{}", sign, change);
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests;
@@ -86,12 +114,42 @@ fn main() {
         Some(Commands::Keys) => {
             print_env_keys_to_writer(&cli.file, &mut std::io::stdout());
         }
-        Some(Commands::Delete { keys }) => {
-            if let Err(e) = envset::delete_keys(&cli.file, keys) {
-                eprintln!("Error deleting environment variables: {}", e);
+        Some(Commands::Delete { keys }) => match read_env_file_contents(&cli.file) {
+            Ok(old_content) => match envset::delete_env_vars(&old_content, keys) {
+                Ok(updated_lines) => {
+                    let mut buffer = Vec::new();
+                    if let Err(e) = print_env_file_contents(&updated_lines, &mut buffer) {
+                        eprintln!("Error writing .env file contents: {}", e);
+                        process::exit(1);
+                    }
+                    let new_content = String::from_utf8_lossy(&buffer);
+
+                    if old_content == new_content {
+                        eprintln!(
+                            "No environment variables found to delete. Attempted to delete: {}",
+                            keys.join(", ")
+                        );
+                        process::exit(1);
+                    }
+
+                    let use_color = atty::is(Stream::Stdout);
+                    print_diff(&old_content, &new_content, use_color);
+
+                    if let Err(e) = std::fs::write(&cli.file, buffer) {
+                        eprintln!("Error writing .env file: {}", e);
+                        process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error deleting environment variables: {}", e);
+                    process::exit(1);
+                }
+            },
+            Err(e) => {
+                eprintln!("Error reading .env file: {}", e);
                 process::exit(1);
             }
-        }
+        },
         None => {}
     }
 
@@ -120,20 +178,40 @@ fn main() {
             }
         };
 
-        let original_env = env_vars.clone();
-
         for (key, value) in &new_vars {
             if !env_vars.contains_key(key as &str) || !no_overwrite {
                 env_vars.insert(key.clone(), value.clone());
             }
         }
 
-        if let Err(e) = print_env_file(&cli.file, &env_vars) {
-            eprintln!("Error writing .env file: {}", e);
-            process::exit(1);
-        }
+        match read_env_file_contents(&cli.file) {
+            Ok(old_content) => match add_env_vars(&old_content, &env_vars) {
+                Ok(updated_lines) => {
+                    let mut buffer = Vec::new();
+                    if let Err(e) = print_env_file_contents(&updated_lines, &mut buffer) {
+                        eprintln!("Error writing .env file contents: {}", e);
+                        process::exit(1);
+                    }
+                    let new_content = String::from_utf8_lossy(&buffer);
 
-        print_diff(&original_env, &env_vars, &mut std::io::stdout());
+                    let use_color = atty::is(Stream::Stdout);
+                    print_diff(&old_content, &new_content, use_color);
+
+                    if let Err(e) = std::fs::write(&cli.file, buffer) {
+                        eprintln!("Error writing .env file: {}", e);
+                        process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error updating .env file contents: {}", e);
+                    process::exit(1);
+                }
+            },
+            Err(e) => {
+                eprintln!("Error reading .env file: {}", e);
+                process::exit(1);
+            }
+        }
     }
 
     if should_print {

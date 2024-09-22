@@ -2,7 +2,7 @@ mod parser;
 
 use chumsky::Parser;
 use colored::Colorize;
-use serde_json::{self, json};
+use serde_json::json;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Read, Write};
@@ -53,9 +53,15 @@ pub fn print_env_vars_as_json<W: Write>(file_path: &str, writer: &mut W) {
     }
 }
 
-pub fn print_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
-    let content = fs::read_to_string(file_path).unwrap_or_default();
-    let mut lines = parser::parser().parse(&*content).map_err(|e| {
+pub fn read_env_file_contents(file_path: &str) -> std::io::Result<String> {
+    fs::read_to_string(file_path)
+}
+
+pub fn add_env_vars(
+    content: &str,
+    env_vars: &HashMap<String, String>,
+) -> Result<Vec<parser::Line>, std::io::Error> {
+    let mut lines = parser::parser().parse(content).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
             format!("Error parsing .env file: {:?}", e),
@@ -90,9 +96,22 @@ pub fn print_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
         }
     }
 
-    let mut buffer = Vec::new();
-    print_lines(&lines, &mut buffer, false);
+    Ok(lines)
+}
 
+pub fn print_env_file_contents<W: Write>(
+    lines: &[parser::Line],
+    writer: &mut W,
+) -> std::io::Result<()> {
+    print_lines(lines, writer, false);
+    Ok(())
+}
+
+pub fn update_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
+    let content = read_env_file_contents(file_path).unwrap_or_default();
+    let lines = add_env_vars(&content, env_vars)?;
+    let mut buffer = Vec::new();
+    print_env_file_contents(&lines, &mut buffer)?;
     fs::write(file_path, buffer)
 }
 
@@ -206,47 +225,16 @@ pub fn print_env_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     }
 }
 
-pub fn print_diff<W: Write>(
-    original: &HashMap<String, String>,
-    updated: &HashMap<String, String>,
-    writer: &mut W,
-) {
-    for key in updated.keys() {
-        let updated_value = updated.get(key).unwrap();
-        match original.get(key) {
-            Some(original_value) if original_value != updated_value => {
-                writeln!(writer, "{}", format!("-{}={}", key, original_value).red()).unwrap();
-                writeln!(writer, "{}", format!("+{}={}", key, updated_value).green()).unwrap();
-            }
-            None => {
-                writeln!(writer, "{}", format!("+{}={}", key, updated_value).green()).unwrap();
-            }
-            _ => {}
-        }
-    }
-
-    for key in original.keys() {
-        if !updated.contains_key(key) {
-            writeln!(
-                writer,
-                "{}",
-                format!("-{}={}", key, original.get(key).unwrap()).red()
-            )
-            .unwrap();
-        }
-    }
-}
-
-pub fn delete_keys(file_path: &str, keys: &[String]) -> std::io::Result<()> {
-    let content = fs::read_to_string(file_path)?;
-    let lines = parser::parser().parse(&*content).map_err(|e| {
+pub fn delete_env_vars(
+    content: &str,
+    keys: &[String],
+) -> Result<Vec<parser::Line>, std::io::Error> {
+    let lines = parser::parser().parse(content).map_err(|e| {
         std::io::Error::new(
             std::io::ErrorKind::InvalidData,
             format!("Error parsing .env file: {:?}", e),
         )
     })?;
-
-    let original_env = parse_env_content(&content);
 
     let updated_lines: Vec<parser::Line> = lines
         .into_iter()
@@ -259,15 +247,7 @@ pub fn delete_keys(file_path: &str, keys: &[String]) -> std::io::Result<()> {
         })
         .collect();
 
-    let mut buffer = Vec::new();
-    print_lines(&updated_lines, &mut buffer, false);
-
-    fs::write(file_path, &buffer)?;
-
-    let updated_env = parse_env_content(&String::from_utf8_lossy(&buffer));
-    print_diff(&original_env, &updated_env, &mut std::io::stdout());
-
-    Ok(())
+    Ok(updated_lines)
 }
 
 fn needs_quoting(value: &str) -> bool {
