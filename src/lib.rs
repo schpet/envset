@@ -1,72 +1,99 @@
+mod parser;
+
+use chumsky::Parser;
 use colored::Colorize;
-use std::collections::{HashMap, HashSet};
-use std::fs::{self, OpenOptions};
+use serde_json::{self, json};
+use std::collections::HashMap;
+use std::fs;
 use std::io::{self, Read, Write};
 use std::path::Path;
 
-pub fn read_env_file(
-    file_path: &str,
-) -> Result<(HashMap<String, String>, Vec<String>), std::io::Error> {
+pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io::Error> {
     let path = Path::new(file_path);
-    let mut env_vars = HashMap::new();
-    let mut original_lines = Vec::new();
 
     if path.exists() {
         let contents = fs::read_to_string(path)?;
-        for line in contents.lines() {
-            original_lines.push(line.to_string());
-            if let Some((key, value)) = line.split_once('=') {
-                if !line.trim_start().starts_with('#') {
-                    env_vars.insert(
-                        key.trim().to_string(),
-                        value.trim().trim_matches('"').trim_matches('\'').to_owned(),
-                    );
-                }
-            }
-        }
+        Ok(parse_env_content(&contents))
+    } else {
+        Ok(HashMap::new())
     }
-
-    Ok((env_vars, original_lines))
 }
 
-pub fn write_env_file(
-    file_path: &str,
-    env_vars: &HashMap<String, String>,
-    original_lines: &[String],
-) -> std::io::Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .create(true)
-        .open(file_path)?;
-
-    let mut written_keys = HashSet::new();
-
-    // First pass: write existing lines and update values
-    for line in original_lines {
-        if let Some((key, _)) = line.split_once('=') {
-            let trimmed_key = key.trim();
-            if let Some(value) = env_vars.get(trimmed_key) {
-                if !written_keys.contains(trimmed_key) {
-                    writeln!(file, "{}={}", trimmed_key, value)?;
-                    written_keys.insert(trimmed_key.to_string());
-                }
-            } else {
-                writeln!(file, "{}", line)?;
+pub fn print_parse_tree<W: Write>(file_path: &str, writer: &mut W) {
+    match fs::read_to_string(file_path) {
+        Ok(content) => match parser::parser().parse(content) {
+            Ok(lines) => {
+                let json = serde_json::to_string_pretty(&lines).unwrap();
+                writeln!(writer, "{}", json).unwrap();
             }
-        } else {
-            writeln!(file, "{}", line)?;
+            Err(e) => {
+                eprintln!("Error parsing .env file: {:?}", e);
+            }
+        },
+        Err(e) => {
+            eprintln!("Error reading .env file: {:?}", e);
         }
     }
+}
 
-    // Second pass: write new variables
+pub fn print_env_vars_as_json<W: Write>(file_path: &str, writer: &mut W) {
+    match read_env_vars(file_path) {
+        Ok(env_vars) => {
+            let json_output = json!(env_vars);
+            writeln!(
+                writer,
+                "{}",
+                serde_json::to_string_pretty(&json_output).unwrap()
+            )
+            .unwrap();
+        }
+        Err(e) => {
+            eprintln!("Error reading .env file: {:?}", e);
+        }
+    }
+}
+
+pub fn print_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> std::io::Result<()> {
+    let content = fs::read_to_string(file_path).unwrap_or_default();
+    let mut lines = parser::parser().parse(&*content).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Error parsing .env file: {:?}", e),
+        )
+    })?;
+
+    // Replace the last instance of each key in place
     for (key, value) in env_vars {
-        if !written_keys.contains(key.as_str()) {
-            writeln!(file, "{}={}", key, value)?;
+        let mut last_index = None;
+        for (index, line) in lines.iter().enumerate().rev() {
+            if let parser::Line::KeyValue { key: line_key, .. } = line {
+                if line_key == key {
+                    last_index = Some(index);
+                    break;
+                }
+            }
+        }
+
+        if let Some(index) = last_index {
+            lines[index] = parser::Line::KeyValue {
+                key: key.clone(),
+                value: value.clone(),
+                comment: None,
+            };
+        } else {
+            // If the key doesn't exist, add it at the end
+            lines.push(parser::Line::KeyValue {
+                key: key.clone(),
+                value: value.clone(),
+                comment: None,
+            });
         }
     }
 
-    Ok(())
+    let mut buffer = Vec::new();
+    print_lines(&lines, &mut buffer);
+
+    fs::write(file_path, buffer)
 }
 
 pub fn parse_stdin() -> HashMap<String, String> {
@@ -81,75 +108,76 @@ pub fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, Strin
 
 pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
     vars.iter()
-        .filter_map(|var| {
-            let mut parts = var.splitn(2, '=');
-            match (parts.next(), parts.next()) {
-                (Some(key), Some(value)) => Some((
-                    key.trim().to_string(),
-                    value
-                        .trim()
-                        .trim_matches('\'')
-                        .trim_matches('"')
-                        .to_string(),
-                )),
-                _ => {
-                    println!("Invalid argument: {}. Skipping.", var);
-                    None
-                }
+        .filter_map(|arg| {
+            let parts: Vec<&str> = arg.splitn(2, '=').collect();
+            if parts.len() == 2 {
+                Some((parts[0].to_string(), parts[1].to_string()))
+            } else {
+                None
             }
         })
         .collect()
 }
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {
-    content
-        .lines()
-        .filter_map(|line| {
-            let line = line.trim();
-            if line.is_empty() || line.starts_with('#') {
-                None
-            } else {
-                let mut parts = line.splitn(2, '=');
-                match (parts.next(), parts.next()) {
-                    (Some(key), Some(value)) => Some((
-                        key.trim().to_string(),
-                        value
-                            .trim()
-                            .trim_matches('\'')
-                            .trim_matches('"')
-                            .to_string(),
-                    )),
-                    _ => None,
+    match parser::parser().parse(content) {
+        Ok(lines) => lines
+            .into_iter()
+            .filter_map(|line| {
+                if let parser::Line::KeyValue { key, value, .. } = line {
+                    Some((key, value))
+                } else {
+                    None
                 }
-            }
-        })
-        .collect()
-}
-
-pub fn print_all_env_vars(file_path: &str) {
-    print_all_env_vars_to_writer(file_path, &mut std::io::stdout());
-}
-
-pub fn print_all_env_vars_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    if let Ok((env_vars, _)) = read_env_file(file_path) {
-        let mut sorted_keys: Vec<_> = env_vars.keys().collect();
-        sorted_keys.sort();
-        for key in sorted_keys {
-            if let Some(value) = env_vars.get(key) {
-                writeln!(writer, "{}={}", key.blue().bold(), value.green()).unwrap();
-            }
+            })
+            .collect(),
+        Err(e) => {
+            eprintln!("Error parsing .env content: {:?}", e);
+            HashMap::new()
         }
-    } else {
-        eprintln!("Error reading .env file");
     }
 }
 
-pub fn print_all_keys(file_path: &str) {
-    print_all_keys_to_writer(file_path, &mut std::io::stdout());
+pub fn print_env_vars<W: Write>(file_path: &str, writer: &mut W) {
+    match fs::read_to_string(file_path) {
+        Ok(content) => match parser::parser().parse(content) {
+            Ok(lines) => {
+                print_lines(&lines, writer);
+            }
+            Err(e) => {
+                eprintln!("Error parsing .env file: {:?}", e);
+            }
+        },
+        Err(_) => {
+            eprintln!("Error reading .env file");
+        }
+    }
 }
 
-pub fn print_all_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
-    if let Ok((env_vars, _)) = read_env_file(file_path) {
+pub fn print_lines<W: Write>(lines: &[parser::Line], writer: &mut W) {
+    for line in lines {
+        match line {
+            parser::Line::Comment(comment) => {
+                writeln!(writer, "#{}", comment).unwrap();
+            }
+            parser::Line::KeyValue {
+                key,
+                value,
+                comment,
+            } => {
+                let quoted_value = quote_value(value);
+                let mut line = format!("{}={}", key, quoted_value);
+                if let Some(comment) = comment {
+                    line.push_str(&format!(" #{}", comment));
+                }
+                writeln!(writer, "{}", line).unwrap();
+            }
+        }
+    }
+}
+
+pub fn print_env_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
+    if let Ok(env_vars) = read_env_vars(file_path) {
         for key in env_vars.keys() {
             writeln!(writer, "{}", key).unwrap();
         }
@@ -158,11 +186,7 @@ pub fn print_all_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     }
 }
 
-pub fn print_diff(original: &HashMap<String, String>, updated: &HashMap<String, String>) {
-    print_diff_to_writer(original, updated, &mut std::io::stdout());
-}
-
-pub fn print_diff_to_writer<W: Write>(
+pub fn print_diff<W: Write>(
     original: &HashMap<String, String>,
     updated: &HashMap<String, String>,
     writer: &mut W,
@@ -193,28 +217,72 @@ pub fn print_diff_to_writer<W: Write>(
     }
 }
 
-pub fn delete_env_vars(file_path: &str, keys: &[String]) -> std::io::Result<()> {
-    let (_env_vars, original_lines) = read_env_file(file_path)?;
+pub fn delete_keys(file_path: &str, keys: &[String]) -> std::io::Result<()> {
+    let content = fs::read_to_string(file_path)?;
+    let lines = parser::parser().parse(&*content).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Error parsing .env file: {:?}", e),
+        )
+    })?;
 
-    let updated_lines: Vec<String> = original_lines
+    let updated_lines: Vec<parser::Line> = lines
         .into_iter()
         .filter(|line| {
-            if let Some((key, _)) = line.split_once('=') {
-                !keys.contains(&key.trim().to_string())
+            if let parser::Line::KeyValue { key, .. } = line {
+                !keys.contains(key)
             } else {
                 true
             }
         })
         .collect();
 
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(file_path)?;
+    let mut buffer = Vec::new();
+    print_lines(&updated_lines, &mut buffer);
 
-    for line in updated_lines {
-        writeln!(file, "{}", line)?;
+    fs::write(file_path, buffer)
+}
+
+fn needs_quoting(value: &str) -> bool {
+    value.chars().any(|c| {
+        c.is_whitespace()
+            || c == '\''
+            || c == '"'
+            || c == '\\'
+            || c == '$'
+            || c == '#'
+            || c < ' '
+            || c as u32 > 127
+    }) || value.is_empty()
+}
+
+fn quote_value(value: &str) -> String {
+    if needs_quoting(value) {
+        let mut quoted = String::with_capacity(value.len() + 2);
+        quoted.push('"');
+        for c in value.chars() {
+            match c {
+                '"' | '\\' => {
+                    quoted.push('\\');
+                    quoted.push(c);
+                }
+                '\n' => {
+                    quoted.push_str("\\n");
+                }
+                '\r' => {
+                    quoted.push_str("\\r");
+                }
+                '\t' => {
+                    quoted.push_str("\\t");
+                }
+                _ => {
+                    quoted.push(c);
+                }
+            }
+        }
+        quoted.push('"');
+        quoted
+    } else {
+        value.to_string()
     }
-
-    Ok(())
 }

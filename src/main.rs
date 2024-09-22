@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::process;
 
 use envset::{
-    parse_args, parse_stdin, print_all_env_vars, print_all_keys, print_diff, read_env_file,
-    write_env_file,
+    parse_args, parse_stdin, print_diff, print_env_file, print_env_keys_to_writer, print_env_vars,
+    print_env_vars_as_json, print_parse_tree, read_env_vars,
 };
 
 #[cfg(test)]
@@ -35,7 +35,14 @@ enum Commands {
     /// Get the value of a single environment variable
     Get { key: String },
     /// Print all environment variables
-    Print,
+    Print {
+        /// Print the JSON representation of the parse tree
+        #[arg(short = 'p', long = "parse-tree")]
+        parse_tree: bool,
+        /// Print the environment variables as a JSON object
+        #[arg(short = 'j', long = "json")]
+        json: bool,
+    },
     /// Print all keys in the .env file
     Keys,
     /// Delete specified environment variables
@@ -52,8 +59,8 @@ fn main() {
     let mut should_print = cli.command.is_none() && cli.vars.is_empty();
 
     match &cli.command {
-        Some(Commands::Get { key }) => match read_env_file(&cli.file) {
-            Ok((env_vars, _)) => match env_vars.get(key) {
+        Some(Commands::Get { key }) => match read_env_vars(&cli.file) {
+            Ok(env_vars) => match env_vars.get(key) {
                 Some(value) => println!("{}", value),
                 None => {
                     eprintln!("Environment variable '{}' not found", key);
@@ -65,14 +72,21 @@ fn main() {
                 process::exit(1);
             }
         },
-        Some(Commands::Print) => {
-            should_print = true;
+        Some(Commands::Print { parse_tree, json }) => {
+            if *parse_tree {
+                print_parse_tree(&cli.file, &mut std::io::stdout());
+            } else if *json {
+                print_env_vars_as_json(&cli.file, &mut std::io::stdout());
+            } else {
+                print_env_vars(&cli.file, &mut std::io::stdout());
+            }
+            return; // Exit after printing
         }
         Some(Commands::Keys) => {
-            print_all_keys(&cli.file);
+            print_env_keys_to_writer(&cli.file, &mut std::io::stdout());
         }
         Some(Commands::Delete { keys }) => {
-            let (env_vars, _) = match read_env_file(&cli.file) {
+            let env_vars = match read_env_vars(&cli.file) {
                 Ok(result) => result,
                 Err(e) => {
                     eprintln!("Error reading .env file: {}", e);
@@ -82,13 +96,13 @@ fn main() {
 
             let original_env = env_vars.clone();
 
-            if let Err(e) = envset::delete_env_vars(&cli.file, keys) {
+            if let Err(e) = envset::delete_keys(&cli.file, keys) {
                 eprintln!("Error deleting environment variables: {}", e);
                 process::exit(1);
             }
 
-            let (updated_env, _) = read_env_file(&cli.file).unwrap();
-            print_diff(&original_env, &updated_env);
+            let updated_env = read_env_vars(&cli.file).unwrap();
+            print_diff(&original_env, &updated_env, &mut std::io::stdout());
         }
         None => {}
     }
@@ -97,6 +111,7 @@ fn main() {
         if !atty::is(Stream::Stdin) {
             parse_stdin()
         } else {
+            println!("Debugging: cli.vars = {:?}", cli.vars);
             parse_args(&cli.vars)
         }
     } else {
@@ -106,11 +121,11 @@ fn main() {
     if !new_vars.is_empty() {
         should_print = false; // Don't print all vars when setting new ones
         let no_overwrite = cli.no_overwrite;
-        let (mut env_vars, original_lines) = match read_env_file(&cli.file) {
+        let mut env_vars = match read_env_vars(&cli.file) {
             Ok(result) => result,
             Err(e) => {
                 if e.kind() == std::io::ErrorKind::NotFound {
-                    (HashMap::new(), Vec::new())
+                    HashMap::new()
                 } else {
                     eprintln!("Error reading .env file: {}", e);
                     process::exit(1);
@@ -126,21 +141,21 @@ fn main() {
             }
         }
 
-        if let Err(e) = write_env_file(&cli.file, &env_vars, &original_lines) {
+        if let Err(e) = print_env_file(&cli.file, &env_vars) {
             eprintln!("Error writing .env file: {}", e);
             process::exit(1);
         }
 
-        print_diff(&original_env, &env_vars);
+        print_diff(&original_env, &env_vars, &mut std::io::stdout());
     }
 
     if should_print {
         if atty::is(Stream::Stdout) {
-            print_all_env_vars(&cli.file);
+            print_env_vars(&cli.file, &mut std::io::stdout());
         } else {
             // If not outputting to a terminal, use a plain writer without colors
             let mut writer = std::io::stdout();
-            envset::print_all_env_vars_to_writer(&cli.file, &mut writer);
+            envset::print_env_vars(&cli.file, &mut writer);
         }
     }
 }
