@@ -91,7 +91,7 @@ pub fn print_env_file(file_path: &str, env_vars: &HashMap<String, String>) -> st
     }
 
     let mut buffer = Vec::new();
-    print_lines(&lines, &mut buffer);
+    print_lines(&lines, &mut buffer, false);
 
     fs::write(file_path, buffer)
 }
@@ -138,11 +138,11 @@ pub fn parse_env_content(content: &str) -> HashMap<String, String> {
     }
 }
 
-pub fn print_env_vars<W: Write>(file_path: &str, writer: &mut W) {
+pub fn print_env_vars<W: Write>(file_path: &str, writer: &mut W, use_color: bool) {
     match fs::read_to_string(file_path) {
         Ok(content) => match parser::parser().parse(content) {
             Ok(lines) => {
-                print_lines(&lines, writer);
+                print_lines(&lines, writer, use_color);
             }
             Err(e) => {
                 eprintln!("Error parsing .env file: {:?}", e);
@@ -154,21 +154,41 @@ pub fn print_env_vars<W: Write>(file_path: &str, writer: &mut W) {
     }
 }
 
-pub fn print_lines<W: Write>(lines: &[parser::Line], writer: &mut W) {
+pub fn print_lines<W: Write>(lines: &[parser::Line], writer: &mut W, use_color: bool) {
     for line in lines {
         match line {
             parser::Line::Comment(comment) => {
-                writeln!(writer, "#{}", comment).unwrap();
+                let comment_str = if use_color {
+                    format!("#{}", comment).bright_black().to_string()
+                } else {
+                    format!("#{}", comment)
+                };
+                writeln!(writer, "{}", comment_str).unwrap();
             }
             parser::Line::KeyValue {
                 key,
                 value,
                 comment,
             } => {
+                let key_str = if use_color {
+                    key.blue().to_string()
+                } else {
+                    key.to_string()
+                };
                 let quoted_value = quote_value(value);
-                let mut line = format!("{}={}", key, quoted_value);
+                let value_str = if use_color {
+                    quoted_value.green().to_string()
+                } else {
+                    quoted_value
+                };
+                let mut line = format!("{}={}", key_str, value_str);
                 if let Some(comment) = comment {
-                    line.push_str(&format!(" #{}", comment));
+                    let comment_str = if use_color {
+                        format!(" #{}", comment).bright_black().to_string()
+                    } else {
+                        format!(" #{}", comment)
+                    };
+                    line.push_str(&comment_str);
                 }
                 writeln!(writer, "{}", line).unwrap();
             }
@@ -226,6 +246,8 @@ pub fn delete_keys(file_path: &str, keys: &[String]) -> std::io::Result<()> {
         )
     })?;
 
+    let original_env = parse_env_content(&content);
+
     let updated_lines: Vec<parser::Line> = lines
         .into_iter()
         .filter(|line| {
@@ -238,9 +260,14 @@ pub fn delete_keys(file_path: &str, keys: &[String]) -> std::io::Result<()> {
         .collect();
 
     let mut buffer = Vec::new();
-    print_lines(&updated_lines, &mut buffer);
+    print_lines(&updated_lines, &mut buffer, false);
 
-    fs::write(file_path, buffer)
+    fs::write(file_path, &buffer)?;
+
+    let updated_env = parse_env_content(&String::from_utf8_lossy(&buffer));
+    print_diff(&original_env, &updated_env, &mut std::io::stdout());
+
+    Ok(())
 }
 
 fn needs_quoting(value: &str) -> bool {

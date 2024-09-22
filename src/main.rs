@@ -73,12 +73,13 @@ fn main() {
             }
         },
         Some(Commands::Print { parse_tree, json }) => {
+            let use_color = atty::is(Stream::Stdout);
             if *parse_tree {
                 print_parse_tree(&cli.file, &mut std::io::stdout());
             } else if *json {
                 print_env_vars_as_json(&cli.file, &mut std::io::stdout());
             } else {
-                print_env_vars(&cli.file, &mut std::io::stdout());
+                print_env_vars(&cli.file, &mut std::io::stdout(), use_color);
             }
             return; // Exit after printing
         }
@@ -86,23 +87,10 @@ fn main() {
             print_env_keys_to_writer(&cli.file, &mut std::io::stdout());
         }
         Some(Commands::Delete { keys }) => {
-            let env_vars = match read_env_vars(&cli.file) {
-                Ok(result) => result,
-                Err(e) => {
-                    eprintln!("Error reading .env file: {}", e);
-                    process::exit(1);
-                }
-            };
-
-            let original_env = env_vars.clone();
-
             if let Err(e) = envset::delete_keys(&cli.file, keys) {
                 eprintln!("Error deleting environment variables: {}", e);
                 process::exit(1);
             }
-
-            let updated_env = read_env_vars(&cli.file).unwrap();
-            print_diff(&original_env, &updated_env, &mut std::io::stdout());
         }
         None => {}
     }
@@ -111,7 +99,6 @@ fn main() {
         if !atty::is(Stream::Stdin) {
             parse_stdin()
         } else {
-            println!("Debugging: cli.vars = {:?}", cli.vars);
             parse_args(&cli.vars)
         }
     } else {
@@ -150,12 +137,7 @@ fn main() {
     }
 
     if should_print {
-        if atty::is(Stream::Stdout) {
-            print_env_vars(&cli.file, &mut std::io::stdout());
-        } else {
-            // If not outputting to a terminal, use a plain writer without colors
-            let mut writer = std::io::stdout();
-            envset::print_env_vars(&cli.file, &mut writer);
-        }
+        let use_color = atty::is(Stream::Stdout);
+        print_env_vars(&cli.file, &mut std::io::stdout(), use_color);
     }
 }

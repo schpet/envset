@@ -5,8 +5,8 @@ use tempfile::tempdir;
 
 use crate::{Cli, Commands};
 use envset::{
-    parse_args, parse_stdin_with_reader, print_diff, print_env_file, print_env_keys_to_writer,
-    print_env_vars, read_env_vars,
+    parse_stdin_with_reader, print_diff, print_env_file, print_env_keys_to_writer, print_env_vars,
+    read_env_vars,
 };
 
 #[test]
@@ -252,7 +252,7 @@ fn test_last_occurence_of_duplicate_keys_updated() {
 fn test_delete_env_vars() {
     let dir = tempdir().unwrap();
     let file_path = dir.path().join(".env");
-    let initial_content = "FOO=bar\nBAZ=qux\nQUUX=quux\n";
+    let initial_content = "# Comment\nFOO=bar\nBAZ=qux\n# Another comment\nQUUX=quux\n";
     fs::write(&file_path, initial_content).unwrap();
 
     let keys_to_delete = vec!["FOO".to_string(), "QUUX".to_string()];
@@ -260,8 +260,8 @@ fn test_delete_env_vars() {
 
     let final_content = fs::read_to_string(&file_path).unwrap();
     assert_eq!(
-        final_content, "BAZ=qux\n",
-        "Final content should only contain BAZ=qux"
+        final_content, "# Comment\nBAZ=qux\n# Another comment\n",
+        "Final content should contain BAZ=qux and preserve comments"
     );
 
     let result = read_env_vars(file_path.to_str().unwrap()).unwrap();
@@ -328,7 +328,7 @@ fn test_print_all_env_vars() {
     writeln!(file, "FOO=bar\nBAZ=qux\nABC=123").unwrap();
 
     let mut output = Vec::new();
-    print_env_vars(file_path.to_str().unwrap(), &mut output);
+    print_env_vars(file_path.to_str().unwrap(), &mut output, false);
 
     let output_str = String::from_utf8(output).unwrap();
 
@@ -371,7 +371,7 @@ fn test_no_print_when_args_provided() {
             // This is where we would normally set the environment variables
             // For this test, we're just ensuring it doesn't print
         } else {
-            print_env_vars(file_path.to_str().unwrap(), &mut cursor);
+            print_env_vars(file_path.to_str().unwrap(), &mut cursor, false);
         }
     }
 
@@ -424,7 +424,7 @@ fn test_print_when_no_args() {
                 json: false,
             })
             | None => {
-                print_env_vars(file_path.to_str().unwrap(), &mut cursor);
+                print_env_vars(file_path.to_str().unwrap(), &mut cursor, false);
             }
             Some(Commands::Print {
                 parse_tree: true,
@@ -479,7 +479,7 @@ fn test_no_print_when_vars_set_via_stdin() {
             print_env_file(file_path.to_str().unwrap(), &env_vars).unwrap();
             print_diff(&original_env, &env_vars, &mut stdout);
         } else if cli.command.is_none() {
-            print_env_vars(file_path.to_str().unwrap(), &mut stdout);
+            print_env_vars(file_path.to_str().unwrap(), &mut stdout, false);
         }
     }
 
