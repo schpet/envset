@@ -45,10 +45,6 @@ struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
 
-    /// Do not overwrite existing variables
-    #[arg(short, long)]
-    no_overwrite: bool,
-
     /// File path for the .env file
     #[arg(short = 'f', long = "file", default_value = ".env", global = true)]
     file: String,
@@ -165,7 +161,6 @@ fn main() {
 
     if !new_vars.is_empty() {
         should_print = false; // Don't print all vars when setting new ones
-        let no_overwrite = cli.no_overwrite;
         let mut env_vars = match read_env_vars(&cli.file) {
             Ok(result) => result,
             Err(e) => {
@@ -178,11 +173,7 @@ fn main() {
             }
         };
 
-        for (key, value) in &new_vars {
-            if !env_vars.contains_key(key as &str) || !no_overwrite {
-                env_vars.insert(key.clone(), value.clone());
-            }
-        }
+        env_vars.extend(new_vars);
 
         match read_env_file_contents(&cli.file) {
             Ok(old_content) => match add_env_vars(&old_content, &env_vars) {
