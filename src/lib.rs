@@ -127,17 +127,23 @@ pub fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, Strin
     parse_env_content(&buffer)
 }
 
-pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
-    vars.iter()
-        .filter_map(|arg| {
-            let parts: Vec<&str> = arg.splitn(2, '=').collect();
-            if parts.len() == 2 {
-                Some((parts[0].to_string(), parts[1].to_string()))
-            } else {
-                None
-            }
-        })
-        .collect()
+pub fn parse_args(vars: &[String]) -> Result<HashMap<String, String>, String> {
+    vars.iter().try_fold(HashMap::new(), |mut acc, arg| {
+        let parts: Vec<&str> = arg.splitn(2, '=').collect();
+        if parts.len() == 2 {
+            let key = parser::key_parser()
+                .parse(parts[0])
+                .map_err(|_| format!("Invalid key format in argument: {}", arg.bold().red()))?;
+            acc.insert(key, parts[1].to_string());
+            Ok(acc)
+        } else {
+            Err(format!(
+                "Invalid argument format {}. Expected format is {}",
+                arg.bold().red(),
+                "KEY=value".bold()
+            ))
+        }
+    })
 }
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {

@@ -200,7 +200,13 @@ fn main() {
         if !atty::is(Stream::Stdin) {
             parse_stdin()
         } else {
-            parse_args(&cli.vars)
+            match parse_args(&cli.vars) {
+                Ok(vars) => vars,
+                Err(e) => {
+                    eprintln!("Error parsing arguments: {}", e);
+                    process::exit(1);
+                }
+            }
         }
     } else {
         HashMap::new()
