@@ -27,12 +27,16 @@ fn print_diff(old_content: &str, new_content: &str, use_color: bool) {
                     );
                     println!();
                 }
-                ChangeTag::Insert => print!("{}", change.to_string().trim_end().on_bright_green()),
+                ChangeTag::Insert => {
+                    let line = change.to_string();
+                    let padding = " ".repeat(term_width.saturating_sub(line.trim_end().len()));
+                    print!(
+                        "{}",
+                        (line.trim_end().to_string() + &padding).on_bright_green()
+                    );
+                    println!();
+                }
                 ChangeTag::Equal => print!("{}", change),
-            }
-            // Print a newline after each colored line
-            if change.tag() == ChangeTag::Insert {
-                println!();
             }
         } else {
             let sign = match change.tag() {
