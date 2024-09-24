@@ -6,3 +6,4 @@ test-cmd: cargo test
 auto-test: true
 suggest-shell-commands: false
 cache-prompts: true
+attribute-commit-message-author: false
