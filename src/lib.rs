@@ -262,11 +262,9 @@ pub fn format_env_file(content: &str, prune: bool) -> Result<Vec<parser::Line>, 
 
     let mut key_value_lines: Vec<parser::Line> = lines
         .into_iter()
-        .filter(|line| {
-            match line {
-                parser::Line::KeyValue { value, .. } => !value.is_empty(),
-                parser::Line::Comment(_) => !prune,
-            }
+        .filter(|line| match line {
+            parser::Line::KeyValue { value, .. } => !value.is_empty(),
+            parser::Line::Comment(_) => !prune,
         })
         .collect();
 
