@@ -26,6 +26,7 @@ serde = { version = "1.0.210", features = ["derive"] }
 peg = "0.8.4"
 chumsky = "0.9.3"
 similar = "2.6.0"
+term_size = "0.3.2"
 
 [dev-dependencies]
 strip-ansi-escapes = "0.2.0"
