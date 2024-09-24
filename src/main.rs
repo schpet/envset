@@ -75,6 +75,8 @@ enum Commands {
         #[arg(required = true)]
         keys: Vec<String>,
     },
+    /// Format the .env file (sort keys and remove empty lines)
+    Fmt,
 }
 
 fn main() {
@@ -138,6 +140,34 @@ fn main() {
                 }
                 Err(e) => {
                     eprintln!("Error deleting environment variables: {}", e);
+                    process::exit(1);
+                }
+            },
+            Err(e) => {
+                eprintln!("Error reading .env file: {}", e);
+                process::exit(1);
+            }
+        },
+        Some(Commands::Fmt) => match read_env_file_contents(&cli.file) {
+            Ok(old_content) => match envset::format_env_file(&old_content) {
+                Ok(formatted_lines) => {
+                    let mut buffer = Vec::new();
+                    if let Err(e) = print_env_file_contents(&formatted_lines, &mut buffer) {
+                        eprintln!("Error writing formatted .env file contents: {}", e);
+                        process::exit(1);
+                    }
+                    let new_content = String::from_utf8_lossy(&buffer);
+
+                    let use_color = atty::is(Stream::Stdout);
+                    print_diff(&old_content, &new_content, use_color);
+
+                    if let Err(e) = std::fs::write(&cli.file, buffer) {
+                        eprintln!("Error writing formatted .env file: {}", e);
+                        process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error formatting .env file: {}", e);
                     process::exit(1);
                 }
             },

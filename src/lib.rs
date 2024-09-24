@@ -252,6 +252,30 @@ pub fn delete_env_vars(
     Ok(updated_lines)
 }
 
+pub fn format_env_file(content: &str) -> Result<Vec<parser::Line>, std::io::Error> {
+    let lines = parser::parser().parse(content).map_err(|e| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("Error parsing .env file: {:?}", e),
+        )
+    })?;
+
+    let mut key_value_lines: Vec<parser::Line> = lines
+        .into_iter()
+        .filter(|line| !matches!(line, parser::Line::KeyValue { value, .. } if value.is_empty()))
+        .collect();
+
+    key_value_lines.sort_by(|a, b| {
+        if let (parser::Line::KeyValue { key: key_a, .. }, parser::Line::KeyValue { key: key_b, .. }) = (a, b) {
+            key_a.cmp(key_b)
+        } else {
+            std::cmp::Ordering::Equal
+        }
+    });
+
+    Ok(key_value_lines)
+}
+
 fn needs_quoting(value: &str) -> bool {
     value.chars().any(|c| {
         c.is_whitespace()
