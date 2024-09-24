@@ -20,7 +20,11 @@ pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
         .map(Line::Comment);
 
     // Parser for keys
-    let key = text::ident().padded();
+    pub fn key_parser() -> impl Parser<char, String, Error = Simple<char>> + Clone {
+        text::ident().padded()
+    }
+
+    let key = key_parser();
 
     // Parser for single-quoted values
     let single_quoted_value = just('\'')
