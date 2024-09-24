@@ -89,7 +89,11 @@ enum Commands {
         keys: Vec<String>,
     },
     /// Format the .env file (sort keys and remove empty lines)
-    Fmt,
+    Fmt {
+        /// Remove whole line comments
+        #[arg(short = 'p', long = "prune")]
+        prune: bool,
+    },
 }
 
 fn main() {
@@ -161,8 +165,8 @@ fn main() {
                 process::exit(1);
             }
         },
-        Some(Commands::Fmt) => match read_env_file_contents(&cli.file) {
-            Ok(old_content) => match envset::format_env_file(&old_content) {
+        Some(Commands::Fmt { prune }) => match read_env_file_contents(&cli.file) {
+            Ok(old_content) => match envset::format_env_file(&old_content, *prune) {
                 Ok(formatted_lines) => {
                     let mut buffer = Vec::new();
                     if let Err(e) = print_env_file_contents(&formatted_lines, &mut buffer) {
