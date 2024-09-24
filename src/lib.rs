@@ -266,7 +266,11 @@ pub fn format_env_file(content: &str) -> Result<Vec<parser::Line>, std::io::Erro
         .collect();
 
     key_value_lines.sort_by(|a, b| {
-        if let (parser::Line::KeyValue { key: key_a, .. }, parser::Line::KeyValue { key: key_b, .. }) = (a, b) {
+        if let (
+            parser::Line::KeyValue { key: key_a, .. },
+            parser::Line::KeyValue { key: key_b, .. },
+        ) = (a, b)
+        {
             key_a.cmp(key_b)
         } else {
             std::cmp::Ordering::Equal
