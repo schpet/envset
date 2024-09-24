@@ -127,17 +127,17 @@ pub fn parse_stdin_with_reader<R: Read>(reader: &mut R) -> HashMap<String, Strin
     parse_env_content(&buffer)
 }
 
-pub fn parse_args(vars: &[String]) -> HashMap<String, String> {
+pub fn parse_args(vars: &[String]) -> Result<HashMap<String, String>, String> {
     vars.iter()
-        .filter_map(|arg| {
+        .try_fold(HashMap::new(), |mut acc, arg| {
             let parts: Vec<&str> = arg.splitn(2, '=').collect();
             if parts.len() == 2 {
-                Some((parts[0].to_string(), parts[1].to_string()))
+                acc.insert(parts[0].to_string(), parts[1].to_string());
+                Ok(acc)
             } else {
-                None
+                Err(format!("Invalid argument format: {}", arg))
             }
         })
-        .collect()
 }
 
 pub fn parse_env_content(content: &str) -> HashMap<String, String> {
