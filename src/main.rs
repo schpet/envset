@@ -13,16 +13,22 @@ use envset::{
 
 fn print_diff(old_content: &str, new_content: &str, use_color: bool) {
     let diff = TextDiff::from_lines(old_content, new_content);
+    let term_width = term_size::dimensions().map(|(w, _)| w).unwrap_or(80);
 
     for change in diff.iter_all_changes() {
         if use_color {
             match change.tag() {
-                ChangeTag::Delete => print!("{}", change.to_string().trim_end().on_bright_red()),
+                ChangeTag::Delete => {
+                    let line = change.to_string();
+                    let padding = " ".repeat(term_width.saturating_sub(line.trim_end().len()));
+                    print!("{}", (line.trim_end().to_string() + &padding).on_red());
+                    println!();
+                }
                 ChangeTag::Insert => print!("{}", change.to_string().trim_end().on_bright_green()),
                 ChangeTag::Equal => print!("{}", change),
             }
             // Print a newline after each colored line
-            if change.tag() != ChangeTag::Equal {
+            if change.tag() == ChangeTag::Insert {
                 println!();
             }
         } else {
