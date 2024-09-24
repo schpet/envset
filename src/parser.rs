@@ -12,6 +12,11 @@ pub enum Line {
     },
 }
 
+// Parser for keys
+pub fn key_parser() -> impl Parser<char, String, Error = Simple<char>> + Clone {
+    text::ident().padded()
+}
+
 pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
     // Parser for comments
     let comment = just('#')
@@ -19,12 +24,6 @@ pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
         .map(|(chars, _)| chars.into_iter().collect::<String>())
         .map(Line::Comment);
 
-    // Parser for keys
-    pub fn key_parser() -> impl Parser<char, String, Error = Simple<char>> + Clone {
-        text::ident().padded()
-    }
-
-    pub use key_parser;
 
     let key = key_parser();
 
