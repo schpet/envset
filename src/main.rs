@@ -21,7 +21,10 @@ fn print_diff(old_content: &str, new_content: &str, use_color: bool) {
                 ChangeTag::Delete => {
                     let line = change.to_string();
                     let padding = " ".repeat(term_width.saturating_sub(line.trim_end().len()));
-                    print!("{}", (line.trim_end().to_string() + &padding).on_bright_red());
+                    print!(
+                        "{}",
+                        (line.trim_end().to_string() + &padding).on_bright_red()
+                    );
                     println!();
                 }
                 ChangeTag::Insert => print!("{}", change.to_string().trim_end().on_bright_green()),
