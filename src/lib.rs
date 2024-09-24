@@ -135,8 +135,9 @@ pub fn parse_args(vars: &[String]) -> Result<HashMap<String, String>, String> {
             Ok(acc)
         } else {
             Err(format!(
-                "Invalid argument format {}. Expected format is KEY=value",
-                arg.bold().red()
+                "Invalid argument format {}. Expected format is {}",
+                arg.bold().red(),
+                "KEY=value".bold()
             ))
         }
     })
