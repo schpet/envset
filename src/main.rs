@@ -83,6 +83,7 @@ enum Commands {
     /// Print all keys in the .env file
     Keys,
     /// Delete specified environment variables
+    #[command(alias = "rm")]
     Delete {
         /// Keys to delete
         #[arg(required = true)]

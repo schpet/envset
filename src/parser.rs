@@ -24,7 +24,6 @@ pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
         .map(|(chars, _)| chars.into_iter().collect::<String>())
         .map(Line::Comment);
 
-
     let key = key_parser();
 
     // Parser for single-quoted values
