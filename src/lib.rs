@@ -15,6 +15,8 @@ pub fn read_env_vars(file_path: &str) -> Result<HashMap<String, String>, std::io
         let contents = fs::read_to_string(path)?;
         Ok(parse_env_content(&contents))
     } else {
+        // Create an empty .env file if it doesn't exist
+        fs::write(path, "")?;
         Ok(HashMap::new())
     }
 }

@@ -161,17 +161,10 @@ fn main() {
 
     if !new_vars.is_empty() {
         should_print = false; // Don't print all vars when setting new ones
-        let mut env_vars = match read_env_vars(&cli.file) {
-            Ok(result) => result,
-            Err(e) => {
-                if e.kind() == std::io::ErrorKind::NotFound {
-                    HashMap::new()
-                } else {
-                    eprintln!("Error reading .env file: {}", e);
-                    process::exit(1);
-                }
-            }
-        };
+        let mut env_vars = read_env_vars(&cli.file).unwrap_or_else(|e| {
+            eprintln!("Error reading .env file: {}", e);
+            process::exit(1);
+        });
 
         env_vars.extend(new_vars);
 
