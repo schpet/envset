@@ -1,6 +1,6 @@
 mod parser;
 
-use chumsky::{Parser, prelude::*};
+use chumsky::{prelude::*, Parser};
 use colored::Colorize;
 use serde_json::json;
 use std::collections::HashMap;
