@@ -134,7 +134,7 @@ pub fn parse_args(vars: &[String]) -> Result<HashMap<String, String>, String> {
             acc.insert(parts[0].to_string(), parts[1].to_string());
             Ok(acc)
         } else {
-            Err(format!("Invalid argument format {}. Expected format is KEY=value", arg))
+            Err(format!("Invalid argument format {}. Expected format is KEY=value", arg.bold().red()))
         }
     })
 }
