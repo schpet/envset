@@ -24,6 +24,8 @@ pub fn parser() -> impl Parser<char, Vec<Line>, Error = Simple<char>> + Clone {
         text::ident().padded()
     }
 
+    pub use key_parser;
+
     let key = key_parser();
 
     // Parser for single-quoted values

@@ -1,6 +1,6 @@
 mod parser;
 
-use chumsky::{prelude::*, Parser};
+use chumsky::Parser;
 use colored::Colorize;
 use serde_json::json;
 use std::collections::HashMap;
@@ -131,7 +131,7 @@ pub fn parse_args(vars: &[String]) -> Result<HashMap<String, String>, String> {
     vars.iter().try_fold(HashMap::new(), |mut acc, arg| {
         let parts: Vec<&str> = arg.splitn(2, '=').collect();
         if parts.len() == 2 {
-            let key = parser::key_parser()
+            let key = parser::key_parser
                 .parse(parts[0])
                 .map_err(|_| format!("Invalid key format in argument: {}", arg.bold().red()))?;
             acc.insert(key, parts[1].to_string());
