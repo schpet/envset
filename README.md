@@ -18,6 +18,8 @@ brew install schpet/tap/envset
 cargo install envset
 ```
 
+otherwise, grab the [latest release](https://github.com/schpet/envset/releases).
+
 ## usage
 
 ### set vars
