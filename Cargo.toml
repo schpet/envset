@@ -8,6 +8,7 @@ authors = ["Peter Schilling"]
 repository = "https://github.com/schpet/envset"
 keywords = ["env", "environment", "dotenv", "cli"]
 categories = ["command-line-utilities", "config"]
+homepage = "https://github.com/schpet/envset"
 
 [lib]
 name = "envset"
