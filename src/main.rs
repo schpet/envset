@@ -7,8 +7,8 @@ use std::process;
 
 use envset::{
     add_env_vars, parse_args, parse_stdin, print_env_file_contents, print_env_keys_to_writer,
-    print_env_vars, print_env_vars_as_json, print_parse_tree, read_env_file_contents,
-    read_env_vars,
+    print_env_vars, print_env_vars_as_json, print_keys_from_map, print_parse_tree,
+    read_env_file_contents, read_env_vars,
 };
 
 fn print_diff(old_content: &str, new_content: &str, use_color: bool) {
