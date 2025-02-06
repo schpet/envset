@@ -128,7 +128,12 @@ fn main() {
             return; // Exit after printing
         }
         Some(Commands::Keys) => {
-            print_env_keys_to_writer(&cli.file, &mut std::io::stdout());
+            if !atty::is(Stream::Stdin) {
+                let env_vars = parse_stdin();
+                print_keys_from_map(&env_vars, &mut std::io::stdout());
+            } else {
+                print_env_keys_to_writer(&cli.file, &mut std::io::stdout());
+            }
         }
         Some(Commands::Delete { keys }) => match read_env_file_contents(&cli.file) {
             Ok(old_content) => match envset::delete_env_vars(&old_content, keys) {
