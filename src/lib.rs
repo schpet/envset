@@ -225,11 +225,15 @@ pub fn print_lines<W: Write>(lines: &[parser::Line], writer: &mut W, use_color: 
 
 pub fn print_env_keys_to_writer<W: Write>(file_path: &str, writer: &mut W) {
     if let Ok(env_vars) = read_env_vars(file_path) {
-        for key in env_vars.keys() {
-            writeln!(writer, "{}", key).unwrap();
-        }
+        print_keys_from_map(&env_vars, writer);
     } else {
         eprintln!("Error reading .env file");
+    }
+}
+
+pub fn print_keys_from_map<W: Write>(env_vars: &HashMap<String, String>, writer: &mut W) {
+    for key in env_vars.keys() {
+        writeln!(writer, "{}", key).unwrap();
     }
 }
 
